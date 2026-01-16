@@ -64,7 +64,9 @@ public:
 
    void swap(vector& rhs)
    {
-
+      std::swap(data, rhs.data);
+      std::swap(numCapacity, rhs.numCapacity);
+      std::swap(numElements, rhs.numElements);
    }
    vector & operator = (const vector & rhs);
    vector& operator = (vector&& rhs);
@@ -74,8 +76,8 @@ public:
    //
 
    class iterator;
-   iterator       begin() { return iterator(); }
-   iterator       end() { return iterator(); }
+   iterator       begin() { return iterator(data); }
+   iterator       end() { return iterator(&data[numElements - 1]); }
 
    //
    // Access
@@ -104,9 +106,12 @@ public:
 
    void clear()
    {
+      numElements = 0;
    }
    void pop_back()
    {
+      if (numElements > 0)
+         numElements -= 1;
    }
    void shrink_to_fit();
 
@@ -317,6 +322,15 @@ vector <T> :: ~vector()
 template <typename T>
 void vector <T> :: resize(size_t newElements)
 {
+   if (newElements == 0 && numElements == 0)
+      return;
+
+   T* dataNew = new(T[newElements]);
+   for (int i = 0; i < numElements; i++)
+      dataNew[i] = data[i];
+
+   delete[] data;
+   data = dataNew;
    reserve(newElements);
    numElements = newElements;
 }
@@ -327,11 +341,9 @@ void vector <T> :: resize(size_t newElements, const T & t)
    reserve(newElements);
 
    //for (int i = numElements; i < numCapacity; i++)
-   //   push_back(t);
+   //   data[i] = t;
 
    numElements = newElements;
-
-
 }
 
 /***************************************
@@ -360,7 +372,22 @@ void vector <T> :: reserve(size_t newCapacity)
 template <typename T>
 void vector <T> :: shrink_to_fit()
 {
+   if (numElements == numCapacity)
+      return;
+
+   if (numElements == 0)
+   {
+      data = nullptr;
+      numCapacity = 0;
+      return;
+   }
+
+   T* dataNew = new(T[numElements]);
+   for (int i = 0; i < numElements; i++)
+      dataNew[i] = data[i];
    
+   data = dataNew;
+   numCapacity = numElements;
 }
 
 
@@ -393,7 +420,6 @@ const T & vector <T> :: operator [] (size_t index) const
 template <typename T>
 T & vector <T> :: front ()
 {
-   
    return data[0];
 }
 
@@ -438,19 +464,43 @@ const T & vector <T> :: back() const
 template <typename T>
 void vector <T> :: push_back (const T & t)
 {
-   if (numCapacity == 0)
-      numCapacity = 1;
-   else
-      numCapacity *= 2;
-   
-   //data[numElements++] = t;
+   if (numCapacity == numElements)
+   {
+      if (numCapacity == 0)
+         numCapacity = 1;
+      else
+         numCapacity *= 2;
+
+      T* dataNew = new(T[numCapacity]);
+      for (int i = 0; i < numElements; i++)
+         dataNew[i] = data[i];
+
+      delete[] data;
+      data = dataNew;
+   }
+
+   data[numElements++] = t;
 }
 
 template <typename T>
 void vector <T> ::push_back(T && t)
 {
-   
-   //data[numElements++] = std::move(t);
+   if (numCapacity == numElements)
+   {
+      if (numCapacity == 0)
+         numCapacity = 1;
+      else
+         numCapacity *= 2;
+
+      T* dataNew = new(T[numCapacity]);
+      for (int i = 0; i < numElements; i++)
+         dataNew[i] = data[i];
+
+      delete[] data;
+      data = dataNew;
+   }
+
+   data[numElements++] = std::move(t);
 }
 
 /***************************************
