@@ -15,7 +15,7 @@
  *    This will contain the class definition of:
  *       stack             : similar to std::stack
  * Author
- *    <your names here>
+ *    David Schaad, Tori Tremelling
  ************************************************************************/
 
 #pragma once
@@ -43,12 +43,12 @@ public:
    // Construct
    // 
 
-   stack()                            { container.resize(7); }
-   stack(const stack <T> &  rhs)      { container.resize(7); }
-   stack(      stack <T> && rhs)      { container.resize(7); }
-   stack(const std::vector<T> &  rhs) { container.resize(7); }
-   stack(      std::vector<T> && rhs) { container.resize(7); }
-   ~stack()                           {                      }
+   stack()                            { container.empty(); }
+   stack(const stack <T> &  rhs)      { }
+   stack(stack <T>&& rhs)             { }
+   stack(const std::vector<T> &  rhs) { }
+   stack(      std::vector<T> && rhs) { }
+   ~stack()                           { container.empty(); }
 
    //
    // Assign
@@ -64,15 +64,15 @@ public:
    }
    void swap(stack <T>& rhs)
    {
-
+      std::swap(container, rhs.container);
    }
 
    // 
    // Access
    //
 
-         T& top()       { return *(new T); }
-   const T& top() const { return *(new T); }
+         T& top()       { return container[size() - 1]; }
+   const T& top() const { return container[size() - 1]; }
 
    // 
    // Insert
@@ -87,14 +87,15 @@ public:
 
    void pop() 
    { 
-      
+      if (!empty())
+         --container.numElements;
    }
 
    //
    // Status
    //
-   size_t  size () const { return 99;  }
-   bool empty   () const { return true; }
+   size_t  size () const { return container.size();  }
+   bool empty   () const { return container.size() == 0; }
    
 private:
    
