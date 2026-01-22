@@ -68,10 +68,9 @@ public:
       test_pushMove_standard();
 
       // Delete
-
-      testPopRemovesTop();
-      testPopSingleElement();
-      testPopOnEmptyStack();
+      test_pop_empty();
+      test_pop_one();
+      test_pop_standard();
 
       // Status
       test_size_empty();
@@ -81,12 +80,12 @@ public:
 
       report("Stack");
    }
-   
+
    /***************************************
     * CONSTRUCTOR - Default
     ***************************************/
-   
-   // default constructor, no allocations
+
+    // default constructor, no allocations
    void test_construct_default()
    {  // setup
       Spy::reset();
@@ -109,7 +108,7 @@ public:
       assertEmptyFixture(s);
       // teardown
       teardownStandardFixture(s);
-   } 
+   }
 
 
    /***************************************
@@ -266,7 +265,7 @@ public:
       //    +----+----+----+----+
       assertUnit(sSrc.container.size() == 2);
       if (sSrc.container.size() >= 2)
-      { 
+      {
          assertUnit(sSrc.container[0] == Spy(26));
          assertUnit(sSrc.container[1] == Spy(49));
       }
@@ -760,7 +759,7 @@ public:
     * SIZE EMPTY CAPACITY
     ***************************************/
 
-   // size of empty stack
+    // size of empty stack
    void test_size_empty()
    {  // setup
       custom::stack<Spy> s;
@@ -806,7 +805,7 @@ public:
       assertStandardFixture(s);
       // teardown
       teardownStandardFixture(s);
-   } 
+   }
 
    // is an empty stack empty
    void test_empty_empty()
@@ -860,7 +859,7 @@ public:
     * TOP
     ***************************************/
 
-   // read an element from a stack with one element
+    // read an element from a stack with one element
    void test_top_readOne()
    {  // setup
       //    +----+
@@ -1141,31 +1140,92 @@ public:
     * POP
     ***************************************/
 
-   void testPopRemovesTop() {
-       custom::stack<Spy> s;
-       s.push(10);
-       s.push(20);
+   // do nothing when the container is empty
+   void test_pop_empty()
+   {
+      // setup
+      custom::stack<Spy> s;
+      Spy::reset();
+      // exercise
+      s.pop();
+      // verify
+      assertUnit(Spy::numCopy() == 0);
+      assertUnit(Spy::numAlloc() == 0);
+      assertUnit(Spy::numDelete() == 0);
+      assertUnit(Spy::numDefault() == 0);
+      assertUnit(Spy::numNondefault() == 0);
+      assertUnit(Spy::numCopyMove() == 0);
+      assertUnit(Spy::numAssign() == 0);
+      assertUnit(Spy::numAssignMove() == 0);
+      assertUnit(Spy::numDestructor() == 0);
+      assertUnit(s.container.size() == 0);
+      assertEmptyFixture(s);
+   }  // teardown
 
-       s.pop();
+   // if there is only one element, the container is empty
+   void test_pop_one()
+   {  // setup
+      //    +----+
+      //    | 26 |
+      //    +----+
+      custom::stack<Spy> s;
+      s.container.push_back(Spy(26));
+      Spy::reset();
+      // exercise
+      s.pop();
+      // verify
+      assertUnit(Spy::numCopyMove() == 0);
+      assertUnit(Spy::numCopy() == 0);
+      assertUnit(Spy::numAlloc() == 0);
+      assertUnit(Spy::numAssign() == 0);
+      assertUnit(Spy::numDelete() == 1);
+      assertUnit(Spy::numDefault() == 0);
+      assertUnit(Spy::numNondefault() == 0);
+      assertUnit(Spy::numAssignMove() == 0);
+      assertUnit(Spy::numDestructor() == 1);
+      //    +----+
+      //    |    |
+      //    +----+
+      assertUnit(s.container.size() == 0);
+      assertUnit(s.container.capacity() == 1);
+   }  // teardown
 
-       assertUnit(s.top() == 10);
-       assertUnit(s.size() == 1);
+   // remove the last element
+   void test_pop_standard()
+   {  // setup
+      //    +----+----+----+----+
+      //    | 26 | 49 | 67 | 89 |
+      //    +----+----+----+----+
+      custom::stack<Spy> s;
+      setupStandardFixture(s);
+      Spy::reset();
+      // exercise
+      s.pop();
+      // verify
+      assertUnit(Spy::numCopyMove() == 0);
+      assertUnit(Spy::numCopy() == 0);
+      assertUnit(Spy::numAlloc() == 0);
+      assertUnit(Spy::numAssign() == 0);
+      assertUnit(Spy::numDelete() == 1);
+      assertUnit(Spy::numDefault() == 0);
+      assertUnit(Spy::numNondefault() == 0);
+      assertUnit(Spy::numAssignMove() == 0);
+      assertUnit(Spy::numDestructor() == 1);
+      //    +----+----+----+----+
+      //    | 26 | 49 | 67 |    |
+      //    +----+----+----+----+
+      assertUnit(s.container.size() == 3);
+      assertUnit(s.container.capacity() == 4);
+      if (s.container.size() >= 3)
+      {
+         assertUnit(s.container[0] == Spy(26));
+         assertUnit(s.container[1] == Spy(49));
+         assertUnit(s.container[2] == Spy(67));
+      }
+      // teardown
+      teardownStandardFixture(s);
    }
 
-   void testPopSingleElement() {
-       custom::stack<Spy> s;
-       s.push(42);
-
-       s.pop();
-
-       assertUnit(s.empty());
-   }
-
-   void testPopOnEmptyStack() {
-	   custom::stack<Spy> s;
-	   assertUnit(s.empty());
-   }
-   
    /*************************************************************
     * SETUP STANDARD FIXTURE
     *      0    1    2    3
@@ -1181,7 +1241,7 @@ public:
       s.container[2] = Spy(67);
       s.container[3] = Spy(89);
    }
-   
+
    /*************************************************************
     * TEARDOWN STANDARD FIXTURE
     *      0    1    2    3
@@ -1193,7 +1253,7 @@ public:
    {
       s.container.clear();
    }
-   
+
    /*************************************************************
     * VERIFY EMPTY FIXTURE
     *************************************************************/
@@ -1215,7 +1275,7 @@ public:
    {
       assertIndirect(s.container.size() == 4);
       assertIndirect(s.container.capacity() == 4);
-      
+
       if (s.container.size() >= 4)
       {
          assertIndirect(s.container[0] == Spy(26));

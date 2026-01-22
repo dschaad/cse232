@@ -16,7 +16,7 @@
  *       stack             : similar to std::stack
  * Author
  *    David Schaad, Tori Tremelling
- *    Time: 45 minutes
+ *    Time: 2 hrs 30 mins
  ************************************************************************/
 
 #pragma once
@@ -44,11 +44,11 @@ public:
    // Construct
    // 
 
-   stack()                            { container.empty(); }
-   stack(const stack <T> &  rhs)      { }
-   stack(stack <T>&& rhs)             { }
-   stack(const std::vector<T> &  rhs) { }
-   stack(      std::vector<T> && rhs) { }
+   stack()                            { }
+   stack(const stack <T> &  rhs)      : container(rhs.container) { }
+   stack(stack <T>&& rhs)             : container(std::move(rhs.container)) { }
+   stack(const std::vector<T> &  rhs) : container(rhs) { }
+   stack(      std::vector<T> && rhs) : container(std::move(rhs)) { }
    ~stack()                           { container.empty(); }
 
    //
@@ -57,10 +57,12 @@ public:
 
    stack <T> & operator = (const stack <T> & rhs)
    {
+      container = rhs.container;
       return *this;
    }
    stack <T>& operator = (stack <T> && rhs)
    {
+      container = std::move(rhs.container);
       return *this;
    }
    void swap(stack <T>& rhs)
