@@ -16,6 +16,7 @@
  *       stack             : similar to std::stack
  * Author
  *    David Schaad, Tori Tremelling
+ *    Time: 45 minutes
  ************************************************************************/
 
 #pragma once
@@ -78,8 +79,8 @@ public:
    // Insert
    // 
 
-   void push(const T&  t) {  }
-   void push(      T&& t) {  }
+   void push(const T& t)  { container.push_back(t); }
+   void push(T&& t)       { container.push_back(std::move(t)); }
 
    //
    // Remove
@@ -88,7 +89,7 @@ public:
    void pop() 
    { 
       if (!empty())
-         --container.numElements;
+         container.pop_back();
    }
 
    //

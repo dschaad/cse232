@@ -1165,10 +1165,6 @@ public:
 	   custom::stack<Spy> s;
 	   assertUnit(s.empty());
    }
-
-
-
-
    
    /*************************************************************
     * SETUP STANDARD FIXTURE
