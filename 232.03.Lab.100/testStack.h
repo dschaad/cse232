@@ -69,7 +69,9 @@ public:
 
       // Delete
 
-      /* place your pop unit tests here */;
+      testPopRemovesTop();
+      testPopSingleElement();
+      testPopOnEmptyStack();
 
       // Status
       test_size_empty();
@@ -1138,6 +1140,33 @@ public:
    /***************************************
     * POP
     ***************************************/
+
+   void testPopRemovesTop() {
+       custom::stack<Spy> s;
+       s.push(10);
+       s.push(20);
+
+       s.pop();
+
+       assertUnit(s.top() == 10);
+       assertUnit(s.size() == 1);
+   }
+
+   void testPopSingleElement() {
+       custom::stack<Spy> s;
+       s.push(42);
+
+       s.pop();
+
+       assertUnit(s.empty());
+   }
+
+   void testPopOnEmptyStack() {
+	   custom::stack<Spy> s;
+	   assertUnit(s.empty());
+   }
+
+
 
 
    
