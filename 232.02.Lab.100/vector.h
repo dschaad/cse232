@@ -50,7 +50,7 @@ namespace custom
       // Construct
       //
 
-      vector();
+      vector() : data(nullptr), numCapacity(0), numElements(0) {};
       vector(size_t numElements);
       vector(size_t numElements, const T& t);
       vector(const std::initializer_list<T>& l);
@@ -76,8 +76,8 @@ namespace custom
       //
 
       class iterator;
-      iterator begin() const { return iterator(data); }
-      iterator end()   const { return iterator(data + numElements); }
+      iterator begin() { return iterator(data); }
+      iterator end()   { return iterator(data + numElements); }
 
       //
       // Access
@@ -121,7 +121,7 @@ namespace custom
 
       size_t  size()          const { return numElements; }
       size_t  capacity()      const { return numCapacity; }
-      bool empty()            const { return begin() == end(); }
+      bool empty()            const { return size() == 0; }
 
       // adjust the size of the buffer
 
@@ -213,13 +213,8 @@ namespace custom
     * Default constructor: set the number of elements,
     * construct each element, and copy the values over
     ****************************************/
-   template <typename T>
-   vector <T> ::vector()
-   {
-      data = nullptr;
-      numCapacity = 0;
-      numElements = 0;
-   }
+   //template <typename T>
+   //vector <T> ::vector() {};
 
    /*****************************************
     * VECTOR :: NON-DEFAULT constructors
@@ -394,13 +389,16 @@ namespace custom
    template <typename T>
    void vector <T> ::reserve(size_t newCapacity)
    {
+      // We only need to replace the buffer if the new capacity is greater than our current capacity
       if (newCapacity <= numCapacity)
          return;
 
+      // Create a new buffer and copy the elements over
       T* dataNew = new T[newCapacity];
       for (size_t i = 0; i < numElements; i++)
          dataNew[i] = data[i];
 
+      // Delete the old buffer and reassign it to the new buffer
       delete[] data;
       data = dataNew;
       numCapacity = newCapacity;
@@ -415,9 +413,11 @@ namespace custom
    template <typename T>
    void vector <T> ::shrink_to_fit()
    {
+      // We only need to shrink if we have more capacity than elements
       if (numElements == numCapacity)
          return;
 
+      // If we have no elements but excess capacity, re-initialize the vector
       if (numElements == 0)
       {
          data = nullptr;
@@ -425,6 +425,7 @@ namespace custom
          return;
       }
 
+      // Create a new buffer only as large as we need and copy the elements over
       T* dataNew = new(T[numElements]);
       for (int i = 0; i < numElements; i++)
          dataNew[i] = data[i];
@@ -507,6 +508,8 @@ namespace custom
    {
       if (capacity() == 0)
          reserve(1);
+
+      // If we need new capacity, create a new buffer with twice the current capacity
       if (size() == capacity())
          reserve(capacity() * 2);
 
@@ -534,9 +537,11 @@ namespace custom
    template <typename T>
    vector <T>& vector <T> :: operator = (const vector& rhs)
    {
+      // No need to copy if the rhs is the same
       if (this == &rhs)
          return *this;
 
+      // If rhs has more elements than we have capacity, we need to create a new buffer
       if (rhs.numElements > numCapacity)
       {
          delete[] data;
@@ -558,13 +563,14 @@ namespace custom
       if (this == &rhs)
          return *this;
 
+      // Delete the current buffer and steal the data from the rhs
       delete[] data;
 
       data = rhs.data;
       numElements = rhs.numElements;
       numCapacity = rhs.numCapacity;
 
-
+      // Set the rhs attributes to default values
       rhs.data = nullptr;
       rhs.numElements = 0;
       rhs.numCapacity = 0;
