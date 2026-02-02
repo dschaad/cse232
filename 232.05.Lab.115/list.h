@@ -14,7 +14,8 @@
  *        List         : A class that represents a List
  *        ListIterator : An iterator through List
  * Author
- *    <your names here>
+ *    David Schaad, Tori Tremelling
+ *    Time:
  ************************************************************************/
 
 #pragma once
@@ -45,12 +46,7 @@ public:
    // Construct
    //
    
-   list(const A& a = A())  
-   {
-      numElements = 99;
-      pHead = pTail = new list <T, A> ::Node();
-      pHead->pNext = pTail->pNext = pHead->pPrev = pTail->pPrev = nullptr;
-   }
+   list(const A& a = A()) : numElements(0), pHead(nullptr), pTail(nullptr) {}
    list(list <T, A> & rhs, const A& a = A())
    {
       numElements = 99;
@@ -155,20 +151,11 @@ public:
    //
    // Construct
    //
-   Node()
-   {
-      pNext = pPrev = nullptr;
-   }
-   Node(const T& data)
-   {
-      pNext = pPrev = nullptr;
-      this->data = data;
-   }
-   Node(T&& data)
-   {
-      pNext = pPrev = nullptr;
-      this->data = std::move(data);
-   }
+   Node() : pNext(nullptr), pPrev(nullptr) {}
+
+   Node(const T& data) : data(data), pNext(nullptr), pPrev(nullptr) {}
+
+   Node(T&& data) : data(std::move(data)), pNext(nullptr), pPrev(nullptr) {}
 
    //
    // Member Variables
@@ -271,11 +258,9 @@ list <T, A> ::list(size_t num, const T & t, const A& a)
  * Create a list initialized to a value
  ****************************************/
 template <typename T, typename A>
-list <T, A> ::list(size_t num, const A& a) 
+list <T, A> ::list(size_t num, const A& a) : numElements(num), pHead(nullptr), pTail(nullptr)
 {
-   numElements = 99;
-   pHead = pTail = new list <T, A> ::Node();
-   pHead->pNext = pTail->pNext = pHead->pPrev = pTail->pPrev = nullptr;
+
 }
 
 /*****************************************
