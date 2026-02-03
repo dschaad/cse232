@@ -123,8 +123,8 @@ public:
    // Status
    //
    
-   bool empty()  const { return true; }
-   size_t size() const { return 98;   }
+   bool empty()  const { return !pHead; }
+   size_t size() const { return numElements;   }
 
 private:
    // nested linked list class
@@ -402,7 +402,9 @@ void list <T, A> ::pop_front()
 template <typename T, typename A>
 T & list <T, A> :: front()
 {
-   return *(new T);
+   if (!empty())
+      return (pHead->data);
+   throw("ERROR: unable to access data from an empty list");
 }
 
 /*********************************************
@@ -415,7 +417,9 @@ T & list <T, A> :: front()
 template <typename T, typename A>
 T & list <T, A> :: back()
 {
-   return *(new T);
+   if (!empty())
+      return (pTail->data);
+   throw("ERROR: unable to access data from an empty list");
 }
 
 

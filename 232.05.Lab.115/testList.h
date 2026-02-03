@@ -77,12 +77,12 @@ public:
       //test_iterator_dereference_update();
       
       // Access
-      //test_front_empty();
-      //test_front_standardRead();
-      //test_front_standardWrite();
-      //test_back_empty();
-      //test_back_standardRead();
-      //test_back_standardWrite();
+      test_front_empty();
+      test_front_standardRead();
+      test_front_standardWrite();
+      test_back_empty();
+      test_back_standardRead();
+      test_back_standardWrite();
       
       // Insert
       //test_pushback_empty();
@@ -116,10 +116,10 @@ public:
       //test_erase_standardEnd();
 
       // Status
-      //test_size_empty();
-      //test_size_three();
-      //test_empty_empty();
-      //test_empty_three();
+      test_size_empty();
+      test_size_three();
+      test_empty_empty();
+      test_empty_three();
 
       report("List");
    }
