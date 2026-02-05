@@ -248,7 +248,7 @@ namespace custom
     template <typename T, typename A>
     list <T, A> ::list(size_t num, const T& t, const A& a)
     {
-        numElements = 99;
+        numElements = num;
         pHead = pTail = new list <T, A> ::Node();
         pHead->pNext = pTail->pNext = pHead->pPrev = pTail->pPrev = nullptr;
     }
@@ -324,7 +324,15 @@ namespace custom
     template <typename T, typename A>
     void list <T, A> ::clear()
     {
-
+		Node* p = pHead;
+        while (p != nullptr)
+        {
+            Node* pNext = p->pNext;
+            delete p;
+            p = pNext;
+		}
+        pHead = pTail = nullptr;
+		numElements = 0;
     }
 
     /*********************************************
@@ -337,13 +345,37 @@ namespace custom
     template <typename T, typename A>
     void list <T, A> ::push_back(const T& data)
     {
+        // Pass 'data' to the constructor to copy it
+        Node* pNew = new Node(data);
 
+        pNew->pPrev = pTail;
+        pNew->pNext = nullptr;
+
+        if (pTail != nullptr)
+            pTail->pNext = pNew;
+        else
+            pHead = pNew;
+
+        pTail = pNew;
+        numElements++;
     }
 
     template <typename T, typename A>
     void list <T, A> ::push_back(T&& data)
     {
+        // Use std::move to pass 'data' to the constructor
+        Node* pNew = new Node(std::move(data));
 
+        pNew->pPrev = pTail;
+        pNew->pNext = nullptr;
+
+        if (pTail != nullptr)
+            pTail->pNext = pNew;
+        else
+            pHead = pNew;
+
+        pTail = pNew;
+        numElements++;
     }
 
     /*********************************************
@@ -356,13 +388,37 @@ namespace custom
     template <typename T, typename A>
     void list <T, A> ::push_front(const T& data)
     {
+        // Pass 'data' to the constructor to copy it
+        Node* pNew = new Node(data);
 
+        pNew->pNext = pHead;
+        pNew->pPrev = nullptr;
+
+        if (pHead != nullptr)
+            pHead->pPrev = pNew;
+        else
+            pTail = pNew;
+
+        pHead = pNew;
+        numElements++;
     }
 
     template <typename T, typename A>
     void list <T, A> ::push_front(T&& data)
     {
+		// Use std::move to pass 'data' to the constructor
+        Node* pNew = new Node(std::move(data));
 
+        pNew->pNext = pHead;
+        pNew->pPrev = nullptr;
+
+        if (pHead != nullptr)
+            pHead->pPrev = pNew;
+        else
+            pTail = pNew;
+
+        pHead = pNew;
+        numElements++;
     }
 
 
@@ -433,7 +489,28 @@ namespace custom
     template <typename T, typename A>
     typename list <T, A> ::iterator  list <T, A> ::erase(const list <T, A> ::iterator& it)
     {
-        return end();
+        /*if (it == end())
+			return end();
+
+        Node* itNext = it.p;
+
+        if (it.p.pNext)
+        {
+            it.p.pNext->pPrev = it.p.pPrev;
+            itNext = it.p.pNext;
+        }
+        else
+            pTail = pTail->pPrev;
+
+		if (it.p.pPrev)
+            it.p.pPrev->pNext = it.p.pNext;
+        else
+			pHead = pHead->pNext;
+
+		delete it.p;
+		numElements--;
+        return itNext;*/
+		return end();
     }
 
     /******************************************
