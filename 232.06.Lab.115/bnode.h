@@ -14,7 +14,7 @@
  *        BNode         : A class representing a BNode
  *    Additionally, it will contain a few functions working on Node
  * Author
- *    <your names here>
+ *    David Schaad, Tori Tremelling
  ************************************************************************/
 
 #pragma once
@@ -134,6 +134,7 @@ void clear(BNode <T>*& pThis)
    if (pThis == nullptr)
       return;
 
+   // Recursively delete every node on the left, then every node on the right
    clear(pThis->pLeft);
    clear(pThis->pRight);
 
@@ -151,9 +152,7 @@ inline void swap(BNode <T>*& pLHS, BNode <T>*& pRHS)
 {
    if (pLHS == pRHS)
       return;
-   BNode <T>* pTemp = pLHS;
-   pLHS = pRHS;
-   pRHS = pTemp;
+   std::swap(pLHS, pRHS);
 }
 
 /**********************************************
@@ -169,10 +168,12 @@ BNode <T>* copy(const BNode <T>* pSrc)
 
    BNode<T>* pNew = new BNode<T>(pSrc->data);
 
+   // Recursively copy every node on the left side
    pNew->pLeft = copy(pSrc->pLeft);
    if (pNew->pLeft)
       pNew->pLeft->pParent = pNew;
 
+   // Recursively copy every node on the right side
    pNew->pRight = copy(pSrc->pRight);
    if (pNew->pRight)
       pNew->pRight->pParent = pNew;
@@ -203,12 +204,15 @@ void assign(BNode <T>*& pDest, const BNode <T>* pSrc)
       return;
    }
 
+   // We only want to preserve existing nodes 
    pDest->data = pSrc->data;
 
+   // Recursively assign all the nodes on the left
    assign(pDest->pLeft, pSrc->pLeft);
    if (pDest->pLeft)
       pDest->pLeft->pParent = pDest;
 
+   // Recursively assign all the nodes on the right
    assign(pDest->pRight, pSrc->pRight);
    if (pDest->pRight)
       pDest->pRight->pParent = pDest;
