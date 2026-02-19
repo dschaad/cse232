@@ -111,8 +111,8 @@ public:
    // Status
    //
 
-   bool   empty() const noexcept { return true; }
-   size_t size()  const noexcept { return 99;   }
+   bool   empty() const noexcept { return size() == 0; } // unsure if it's better to compare against numElements directly or use size()
+   size_t size()  const noexcept { return numElements;   }
    
 private:
 
@@ -134,18 +134,9 @@ public:
    // 
    // Construct
    //
-   BNode()
-   {
-      pLeft = pRight = this;
-   }
-   BNode(const T &  t) 
-   {
-      pLeft = pRight = this;
-   }
-   BNode(T && t) 
-   {  
-      pLeft = pRight = this;
-   }
+   BNode()           : pLeft(nullptr), pRight(nullptr), pParent(nullptr), data(), isRed(true) {}
+   BNode(const T& t) : pLeft(nullptr), pRight(nullptr), pParent(nullptr), data(t), isRed(true) {}
+   BNode(T&& t)      : pLeft(nullptr), pRight(nullptr), pParent(nullptr), data(std::move(t)), isRed(true) {}
 
    //
    // Insert
@@ -180,9 +171,9 @@ public:
    // Data
    //
    T data;                  // Actual data stored in the BNode
-   BNode* pLeft;          // Left child - smaller
-   BNode* pRight;         // Right child - larger
-   BNode* pParent;        // Parent
+   BNode* pLeft;            // Left child - smaller
+   BNode* pRight;           // Right child - larger
+   BNode* pParent;          // Parent
    bool isRed;              // Red-black balancing stuff
 };
 
@@ -201,31 +192,32 @@ class BST <T> :: iterator
    friend class custom::map;
 public:
    // constructors and assignment
-   iterator(BNode * p = nullptr)          
+   iterator(BNode * p = nullptr) : pNode(p)
    { 
    }
-   iterator(const iterator & rhs)         
+   iterator(const iterator & rhs) : pNode(rhs.pNode)
    { 
    }
    iterator & operator = (const iterator & rhs)
    {
+      pNode = rhs.pNode;
       return *this;
    }
 
    // compare
    bool operator == (const iterator & rhs) const
    {
-      return true;
+      return pNode == rhs.pNode;
    }
    bool operator != (const iterator & rhs) const
    {
-      return true;
+      return pNode != rhs.pNode;
    }
 
    // de-reference. Cannot change because it will invalidate the BST
    const T & operator * () const 
    {
-      return *(new T);
+      return pNode->data;
    }
 
    // increment and decrement
@@ -263,11 +255,7 @@ private:
   * BST :: DEFAULT CONSTRUCTOR
   ********************************************/
 template <typename T>
-BST <T> ::BST()
-{
-   numElements = 99;
-   root = new BNode;
-}
+BST <T> ::BST() : root(nullptr), numElements(0) {}
 
 /*********************************************
  * BST :: COPY CONSTRUCTOR
@@ -349,7 +337,8 @@ BST <T> & BST <T> :: operator = (BST <T> && rhs)
 template <typename T>
 void BST <T> :: swap (BST <T>& rhs)
 {
-
+   std::swap(this->root, rhs.root);
+   std::swap(this->numElements, rhs.numElements);
 }
 
 /*****************************************************
@@ -387,7 +376,6 @@ typename BST <T> ::iterator BST <T> :: erase(iterator & it)
 template <typename T>
 void BST <T> ::clear() noexcept
 {
-
 }
 
 /*****************************************************
@@ -395,9 +383,17 @@ void BST <T> ::clear() noexcept
  * Return the first node (left-most) in a binary search tree
  ****************************************************/
 template <typename T>
-typename BST <T> :: iterator custom :: BST <T> :: begin() const noexcept
+typename BST <T> ::iterator custom::BST <T> ::begin() const noexcept
 {
-   return end();
+   if (empty())
+      return end();
+
+   BNode* p = root;
+   
+   while (p->pLeft)
+      p = p->pLeft;
+
+   return iterator(p);
 }
 
 
@@ -427,7 +423,6 @@ typename BST <T> :: iterator BST<T> :: find(const T & t)
 template <typename T>
 void BST <T> :: BNode :: addLeft (BNode * pNode)
 {
-
 }
 
 /******************************************************
@@ -437,7 +432,6 @@ void BST <T> :: BNode :: addLeft (BNode * pNode)
 template <typename T>
 void BST <T> :: BNode :: addRight (BNode * pNode)
 {
-
 }
 
 /******************************************************
@@ -637,9 +631,39 @@ void BST <T> :: BNode :: balance()
  * advance by one
  *************************************************/
 template <typename T>
-typename BST <T> :: iterator & BST <T> :: iterator :: operator ++ ()
+typename BST <T> ::iterator& BST <T> ::iterator :: operator ++ ()
 {
-   return *this;  
+   // Can't increment from a null node
+   if (!pNode)
+      ;
+   
+   // Case 1: Have a right child
+   else if (pNode->pRight)
+   {
+      // Go to our right child, then go as far left as possible
+      pNode = pNode->pRight;
+      while (pNode->pLeft)
+         pNode = pNode->pLeft;
+   }
+
+   // Case 2: No right child and we are our parent's left child
+   else if (!pNode->pRight && pNode->pParent->pLeft == pNode)
+   {
+      // Go to our parent node
+      pNode = pNode->pParent;
+   }
+
+   // Case 3: No right child and we are our parent's right child
+   else if (!pNode->pRight && pNode->pParent->pRight == pNode)
+   {
+      // Go up to our parent nodes until we're no longer a right child, then go to our parent
+      while (pNode->pParent && pNode->pParent->pRight == pNode)
+         pNode = pNode->pParent;
+
+      pNode = pNode->pParent;
+   }
+
+   return *this;
 }
 
 /**************************************************
