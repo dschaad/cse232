@@ -15,6 +15,7 @@
  *        BST::iterator       : An iterator through BST
  * Author
  *    David Schaad, Tori Tremelling
+ *    Time spent: 3 hours, 30 minutes
  ************************************************************************/
 
 #pragma once
@@ -192,12 +193,9 @@ class BST <T> :: iterator
    friend class custom::map;
 public:
    // constructors and assignment
-   iterator(BNode * p = nullptr) : pNode(p)
-   { 
-   }
-   iterator(const iterator & rhs) : pNode(rhs.pNode)
-   { 
-   }
+   iterator(BNode * p = nullptr) : pNode(p) {}
+   iterator(const iterator & rhs) : pNode(rhs.pNode) {}
+
    iterator & operator = (const iterator & rhs)
    {
       pNode = rhs.pNode;
@@ -224,12 +222,16 @@ public:
    iterator & operator ++ ();
    iterator   operator ++ (int postfix)
    {
-      return *this;
+      BNode* oldNode = pNode;
+      pNode += postfix;
+      return oldNode;
    }
    iterator & operator -- ();
    iterator   operator -- (int postfix)
    {
-      return *this;;
+      BNode* oldNode = pNode;
+      pNode -= postfix;
+      return oldNode;
    }
 
    // must give friend status to remove so it can call getNode() from it
@@ -347,15 +349,137 @@ void BST <T> :: swap (BST <T>& rhs)
  ****************************************************/
 template <typename T>
 std::pair<typename BST <T> :: iterator, bool> BST <T> :: insert(const T & t, bool keepUnique)
-{
+{   
+   bool done = false;
+   BNode* currentNode = root;
    std::pair<iterator, bool> pairReturn(end(), false);
+
+   // If there is no root node, create one
+   if (!root)
+   {
+      root = new BNode(t);
+      numElements = 1;
+      pairReturn = std::pair<iterator, bool>(iterator(root), true);
+      return pairReturn;
+   }
+
+   while (!done)
+   {
+      if (keepUnique)
+      {
+         // If we encounter a node with the same value, don't insert a new node and return the location of the existing node
+         if (t == currentNode->data)
+         {
+            pairReturn = std::pair<iterator, bool>(iterator(currentNode), false);
+            return pairReturn;
+         }
+      }
+      
+      if (t < currentNode->data)
+      {
+         // If currentNode has a left child, move to it
+         if (currentNode->pLeft)
+            currentNode = currentNode->pLeft;
+
+         // Otherwise, insert a new node as the current node's left child
+         else
+         {
+            currentNode->addLeft(t);
+            numElements++;
+            pairReturn = std::pair<iterator, bool>(iterator(currentNode->pLeft), true);
+            done = true;
+         }
+      }
+
+      else
+      {
+         // If currentNode has a right child, move to it
+         if (currentNode->pRight)
+            currentNode = currentNode->pRight;
+
+         // Otherwise, insert a new node as the current node's right child
+         else
+         {
+            currentNode->addRight(t);
+            numElements++;
+            pairReturn = std::pair<iterator, bool>(iterator(currentNode->pRight), true);
+            done = true;
+         }
+      }
+   }
+   
+   // If we reshuffled the root node, locate and set the new root node
+   while (root->pParent)
+      root = root->pParent;
+
    return pairReturn;
 }
 
 template <typename T>
-std::pair<typename BST <T> ::iterator, bool> BST <T> ::insert(T && t, bool keepUnique)
+std::pair<typename BST <T> ::iterator, bool> BST <T> ::insert(T && t, bool keepUnique) // unsure if there's a way to only need one insert defined
 {
+   bool done = false;
+   BNode* currentNode = root;
    std::pair<iterator, bool> pairReturn(end(), false);
+
+   // If there is no root node, create one
+   if (!root)
+   {
+      root = new BNode(std::move(t));
+      numElements = 1;
+      pairReturn = std::pair<iterator, bool>(iterator(root), true);
+      return pairReturn;
+   }
+
+   while (!done)
+   {
+      if (keepUnique)
+      {
+         // If we encounter a node with the same value, don't insert a new node and return the location of the existing node
+         if (t == currentNode->data)
+         {
+            pairReturn = std::pair<iterator, bool>(iterator(currentNode), false);
+            return pairReturn;
+         }
+      }
+
+      if (t < currentNode->data)
+      {
+         // If currentNode has a left child, move to it
+         if (currentNode->pLeft)
+            currentNode = currentNode->pLeft;
+
+         // Otherwise, insert a new node as the current node's left child
+         else
+         {
+            currentNode->addLeft(std::move(t));
+            numElements++;
+            pairReturn = std::pair<iterator, bool>(iterator(currentNode->pLeft), true);
+            done = true;
+         }
+      }
+
+      else
+      {
+         // If currentNode has a right child, move to it
+         if (currentNode->pRight)
+            currentNode = currentNode->pRight;
+
+         // Otherwise, insert a new node as the current node's right child
+         else
+         {
+            currentNode->addRight(std::move(t));
+            numElements++;
+            pairReturn = std::pair<iterator, bool>(iterator(currentNode->pRight), true);
+            done = true;
+         }
+      }
+   }
+
+   // If we reshuffled the root node, locate and set the new root node
+   while (root->pParent)
+      root = root->pParent;
+
    return pairReturn;
 }
 
@@ -423,6 +547,10 @@ typename BST <T> :: iterator BST<T> :: find(const T & t)
 template <typename T>
 void BST <T> :: BNode :: addLeft (BNode * pNode)
 {
+   this->pLeft = pNode;
+   pNode->pParent = this;
+
+   pNode->balance();
 }
 
 /******************************************************
@@ -432,6 +560,10 @@ void BST <T> :: BNode :: addLeft (BNode * pNode)
 template <typename T>
 void BST <T> :: BNode :: addRight (BNode * pNode)
 {
+   this->pRight = pNode;
+   pNode->pParent = this;
+
+   pNode->balance();
 }
 
 /******************************************************
@@ -441,7 +573,7 @@ void BST <T> :: BNode :: addRight (BNode * pNode)
 template <typename T>
 void BST<T> :: BNode :: addLeft (const T & t)
 {
-
+   addLeft(new BNode(t));
 }
 
 /******************************************************
@@ -451,7 +583,7 @@ void BST<T> :: BNode :: addLeft (const T & t)
 template <typename T>
 void BST<T> ::BNode::addLeft(T && t)
 {
-
+   addLeft(new BNode(std::move(t)));
 }
 
 /******************************************************
@@ -461,7 +593,7 @@ void BST<T> ::BNode::addLeft(T && t)
 template <typename T>
 void BST <T> :: BNode :: addRight (const T & t)
 {
-
+   addRight(new BNode(t));
 }
 
 /******************************************************
@@ -471,7 +603,7 @@ void BST <T> :: BNode :: addRight (const T & t)
 template <typename T>
 void BST <T> ::BNode::addRight(T && t)
 {
-
+   addRight(new BNode(std::move(t)));
 }
 
 #ifdef DEBUG
@@ -673,11 +805,39 @@ typename BST <T> ::iterator& BST <T> ::iterator :: operator ++ ()
 template <typename T>
 typename BST <T> :: iterator & BST <T> :: iterator :: operator -- ()
 {
+   // Can't increment from a null node
+   if (!pNode)
+      ;
+
+   // Case 1: Have a left child
+   else if (pNode->pLeft)
+   {
+      // Go to our left child, then go as far right as possible
+      pNode = pNode->pLeft;
+      while (pNode->pRight)
+         pNode = pNode->pRight;
+   }
+
+   // Case 2: No left child and we are our parent's right child
+   else if (!pNode->pLeft && pNode->pParent->pRight == pNode)
+   {
+      // Go to our parent node
+      pNode = pNode->pParent;
+   }
+
+   // Case 3: No left child and we are our parent's left child
+   else if (!pNode->pLeft && pNode->pParent->pLeft == pNode)
+   {
+      // Go up to our parent nodes until we're no longer a left child, then go to our parent
+      while (pNode->pParent && pNode->pParent->pLeft == pNode)
+         pNode = pNode->pParent;
+
+      pNode = pNode->pParent;
+   }
+   
    return *this;
 
 }
 
 
 } // namespace custom
-
-
