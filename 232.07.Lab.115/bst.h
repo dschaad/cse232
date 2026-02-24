@@ -112,7 +112,7 @@ namespace custom
         // Status
         //
 
-        bool   empty() const noexcept { return size() == 0; } // unsure if it's better to compare against numElements directly or use size()
+        bool   empty() const noexcept { return size() == 0; }
         size_t size()  const noexcept { return numElements; }
 
     private:
@@ -135,9 +135,9 @@ namespace custom
         // 
         // Construct
         //
-        BNode() : pLeft(nullptr), pRight(nullptr), pParent(nullptr), data(), isRed(true) {}
+        BNode()           : pLeft(nullptr), pRight(nullptr), pParent(nullptr), data(), isRed(true) {}
         BNode(const T& t) : pLeft(nullptr), pRight(nullptr), pParent(nullptr), data(t), isRed(true) {}
-        BNode(T&& t) : pLeft(nullptr), pRight(nullptr), pParent(nullptr), data(std::move(t)), isRed(true) {}
+        BNode(T&& t)      : pLeft(nullptr), pRight(nullptr), pParent(nullptr), data(std::move(t)), isRed(true) {}
 
         //
         // Insert
@@ -153,7 +153,7 @@ namespace custom
         // Status
         //
         bool isRightChild(BNode* pNode) const { return pParent && pParent->pRight == this; }
-        bool isLeftChild(BNode* pNode) const { return pParent && pParent->pLeft == this; }
+        bool isLeftChild(BNode* pNode) const  { return pParent && pParent->pLeft  == this; }
 
         // balance the tree
         void balance();
@@ -253,9 +253,9 @@ namespace custom
      *********************************************/
 
 
-     /*********************************************
-      * BST :: DEFAULT CONSTRUCTOR
-      ********************************************/
+    /*********************************************
+     * BST :: DEFAULT CONSTRUCTOR
+     ********************************************/
     template <typename T>
     BST <T> ::BST() : root(nullptr), numElements(0) {}
 
@@ -688,9 +688,6 @@ namespace custom
 
             itNext = iterator(succ);
         }
-
-        //while (root->pParent)
-        //    root = root->pParent;
 
         return itNext;
     }
