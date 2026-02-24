@@ -264,10 +264,29 @@ namespace custom
      * Copy one tree to another
      ********************************************/
     template <typename T>
-    BST <T> ::BST(const BST<T>& rhs)
+    BST <T> ::BST(const BST<T>& rhs) : root(nullptr), numElements(rhs.numElements)
     {
-        numElements = size();
-        root = new BNode;
+        if (!rhs.root)
+            return;
+
+
+        std::function<BNode* (BNode*, BNode*)> copy = [&](BNode* src, BNode* parent) -> BNode*
+            {
+                if (!src)
+                    return nullptr;
+
+                BNode* pNew = new BNode(src->data);
+                pNew->isRed = src->isRed;
+                pNew->pParent = parent;
+
+                pNew->pLeft = copy(src->pLeft, pNew);
+                pNew->pRight = copy(src->pRight, pNew);
+
+                return pNew;
+            };
+
+        root = copy(rhs.root, nullptr);
+        
     }
 
     /*********************************************
@@ -277,8 +296,11 @@ namespace custom
     template <typename T>
     BST <T> ::BST(BST <T>&& rhs)
     {
-        numElements = size();
-        root = new BNode;
+        root = rhs.root;
+        numElements = rhs.numElements;
+
+        rhs.root = nullptr;
+        rhs.numElements = 0;
     }
 
     /*********************************************
@@ -298,7 +320,7 @@ namespace custom
     template <typename T>
     BST <T> :: ~BST()
     {
-
+        clear();
     }
 
 
@@ -309,6 +331,14 @@ namespace custom
     template <typename T>
     BST <T>& BST <T> :: operator = (const BST <T>& rhs)
     {
+        if (this == &rhs)
+            return *this;
+
+        clear();
+
+        BST temp(rhs);
+        swap(temp);
+
         return *this;
     }
 
@@ -317,7 +347,7 @@ namespace custom
      * Copy nodes onto a BTree
      ********************************************/
     template <typename T>
-    BST <T>& BST <T> :: operator = (const std::initializer_list<T>& il)
+    BST <T>& BST <T> :: operator = (const std::initializer_list<T>& il)  
     {
         return *this;
     }
@@ -497,69 +527,242 @@ namespace custom
      * Remove a given node as specified by the iterator
      ************************************************/
     template <typename T>
-    typename BST <T> ::iterator BST <T> ::erase(iterator& it)
+    typename BST<T>::iterator BST<T>::erase(iterator& it)
     {
-        //if (it == end())
-        //    return end();
+        if (it == end())
+            return end();
+
+        BNode* node = it.pNode;
+
+        // compute next iterator BEFORE structural change
+        iterator itNext = it;
+        ++itNext;
+
+        // Step 1: if two children, swap with successor
+        if (node->pLeft && node->pRight)
+        {
+            BNode* succ = node->pRight;
+            while (succ->pLeft)
+                succ = succ->pLeft;
+
+            std::swap(node->data, succ->data);
+            node = succ;
+        }
+
+        // Step 2: get child and parent
+        BNode* child = node->pLeft ? node->pLeft : node->pRight;
+        BNode* parent = node->pParent;
+
+        bool removedBlack = !node->isRed;
+
+        // Step 3: remove node from tree
 
 
-        //BNode* node = it.pNode;
-        //
-        //// compute next iterator BEFORE structural change
-        //iterator itNext = it;
-        //++itNext;
+        // If we removed the root, we're done
+        if (!parent)
+        {
+            if (root)
+                root->isRed = false;
+            return itNext;
+        }
 
-        //// Step 1
-        //if (node->pLeft && node->pRight)
-        //{
-        //    BNode* succ = node->pRight;
-        //    while (succ->pLeft)
-        //        succ = succ->pLeft;
+        // Step 4: if removed red OR replaced by red child done
+        if (!removedBlack)
+            return itNext;
 
-        //    std::swap(node->data, succ->data);
-        //    node = succ;
-        //}
+        if (child && child->isRed)
+        {
+            child->isRed = false;
+            return itNext;
+        }
 
-        //// Step 2
-        //BNode* child = node->pLeft ? node->pLeft : node->pRight;
-        //BNode* parent = node->pParent;
+        // Step 5: fix double black
+        while (parent && (child != root) && (!child || !child->isRed))
+        {
+            if (child == parent->pLeft)
+            {
+                BNode* sibling = parent->pRight;
 
-        //bool removedBlack = !node->isRed;
+                if (!sibling)
+                {
+                    child = parent;
+                    parent = parent->pParent;
+                    continue;
+                }
 
-        //// Step 3
-        //if (child)
-        //    child->pParent = parent;
+                // Case 5a: red sibling
+                if (sibling->isRed)
+                {
+                    sibling->isRed = false;
+                    parent->isRed = true;
 
-        //if (!parent)
-        //    root = child;
-        //else if (parent->pLeft == node)
-        //    parent->pLeft = child;
-        //else
-        //    parent->pRight;
+                    parent->pRight = sibling->pLeft;
+                    if (sibling->pLeft)
+                        sibling->pLeft->pParent = parent;
 
-        //delete node;
-        //numElements--;
+                    sibling->pLeft = parent;
+                    sibling->pParent = parent->pParent;
 
-        //// Step 4
-        //if (!removedBlack)
-        //    return itNext;
+                    if (!parent->pParent)
+                        root = sibling;
+                    else if (parent->pParent->pLeft == parent)
+                        parent->pParent->pLeft = sibling;
+                    else
+                        parent->pParent->pRight = sibling;
 
-        //if (child && child->isRed)
-        //{
-        //    child->isRed = false;
-        //    return itNext;
-        //}
+                    parent->pParent = sibling;
+                    sibling = parent->pRight;
+                }
 
-        //// Step 5
-        //// fixDoubleBlack(child, parent);
+                // Case 5b: black sibling with black children
+                if ((!sibling->pLeft || !sibling->pLeft->isRed) &&
+                    (!sibling->pRight || !sibling->pRight->isRed))
+                {
+                    sibling->isRed = true;
+                    child = parent;
+                    parent = parent->pParent;
+                }
+                else
+                {
+                    // Case 5c
+                    if (!sibling->pRight || !sibling->pRight->isRed)
+                    {
+                        if (sibling->pLeft)
+                            sibling->pLeft->isRed = false;
 
-        //// ensure root color, and pointer
-        //while (root && root->pParent)
-        //    root = root->pParent;
-        //if (root)
-        //    root->isRed = false;
+                        sibling->isRed = true;
 
-        return end();  //itNext;
+                        BNode* temp = sibling->pLeft;
+                        sibling->pLeft = temp->pRight;
+                        if (temp->pRight)
+                            temp->pRight->pParent = sibling;
+
+                        temp->pRight = sibling;
+                        temp->pParent = parent;
+                        parent->pRight = temp;
+                        sibling = temp;
+                    }
+
+                    // Case 5d
+                    sibling->isRed = parent->isRed;
+                    parent->isRed = false;
+                    if (sibling->pRight)
+                        sibling->pRight->isRed = false;
+
+                    parent->pRight = sibling->pLeft;
+                    if (sibling->pLeft)
+                        sibling->pLeft->pParent = parent;
+
+                    sibling->pLeft = parent;
+                    sibling->pParent = parent->pParent;
+
+                    if (!parent->pParent)
+                        root = sibling;
+                    else if (parent->pParent->pLeft == parent)
+                        parent->pParent->pLeft = sibling;
+                    else
+                        parent->pParent->pRight = sibling;
+
+                    parent->pParent = sibling;
+                    break;
+                }
+            }
+            else
+            {
+                BNode* sibling = parent->pLeft;
+
+                if (!sibling)
+                {
+                    child = parent;
+                    parent = parent->pParent;
+                    continue;
+                }
+
+                if (sibling->isRed)
+                {
+                    sibling->isRed = false;
+                    parent->isRed = true;
+
+                    parent->pLeft = sibling->pRight;
+                    if (sibling->pRight)
+                        sibling->pRight->pParent = parent;
+
+                    sibling->pRight = parent;
+                    sibling->pParent = parent->pParent;
+
+                    if (!parent->pParent)
+                        root = sibling;
+                    else if (parent->pParent->pLeft == parent)
+                        parent->pParent->pLeft = sibling;
+                    else
+                        parent->pParent->pRight = sibling;
+
+                    parent->pParent = sibling;
+                    sibling = parent->pLeft;
+                }
+
+                if ((!sibling->pLeft || !sibling->pLeft->isRed) &&
+                    (!sibling->pRight || !sibling->pRight->isRed))
+                {
+                    sibling->isRed = true;
+                    child = parent;
+                    parent = parent->pParent;
+                }
+                else
+                {
+                    if (!sibling->pLeft || !sibling->pLeft->isRed)
+                    {
+                        if (sibling->pRight)
+                            sibling->pRight->isRed = false;
+
+                        sibling->isRed = true;
+
+                        BNode* temp = sibling->pRight;
+                        sibling->pRight = temp->pLeft;
+                        if (temp->pLeft)
+                            temp->pLeft->pParent = sibling;
+
+                        temp->pLeft = sibling;
+                        temp->pParent = parent;
+                        parent->pLeft = temp;
+                        sibling = temp;
+                    }
+
+                    sibling->isRed = parent->isRed;
+                    parent->isRed = false;
+                    if (sibling->pLeft)
+                        sibling->pLeft->isRed = false;
+
+                    parent->pLeft = sibling->pRight;
+                    if (sibling->pRight)
+                        sibling->pRight->pParent = parent;
+
+                    sibling->pRight = parent;
+                    sibling->pParent = parent->pParent;
+
+                    if (!parent->pParent)
+                        root = sibling;
+                    else if (parent->pParent->pLeft == parent)
+                        parent->pParent->pLeft = sibling;
+                    else
+                        parent->pParent->pRight = sibling;
+
+                    parent->pParent = sibling;
+                    break;
+                }
+            }
+        }
+
+        if (child)
+            child->isRed = false;
+
+        while (root && root->pParent)
+            root = root->pParent;
+
+        if (root)
+            root->isRed = false;
+
+        return itNext;
     }
 
     /*****************************************************
@@ -569,6 +772,20 @@ namespace custom
     template <typename T>
     void BST <T> ::clear() noexcept
     {
+        std::function<void(BNode*)> destroy = [&](BNode* node)
+            {
+                if (!node)
+                    return;
+
+                destroy(node->pLeft);
+                destroy(node->pRight);
+
+                delete node;
+            };
+
+        destroy(root);
+        root = nullptr;
+        numElements = 0;
     }
 
     /*****************************************************
