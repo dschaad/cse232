@@ -47,13 +47,13 @@ public:
    set() 
    { 
    }
-   set(const set &  rhs)
+   set(const set &  rhs) : bst(rhs.bst)
    { 
    }
-   set(set && rhs) 
+   set(set && rhs) : bst(std::move(rhs.bst))
    { 
    }
-   set(const std::initializer_list <T> & il) 
+   set(const std::initializer_list <T> & il) : bst(il)
    {
    }
    template <class Iterator>
@@ -68,10 +68,13 @@ public:
 
    set & operator = (const set & rhs)
    {
+      bst = rhs.bst;
       return *this;
    }
    set & operator = (set && rhs)
    {
+      bst = rhs.bst;
+      rhs.bst.clear();
       return *this;
    }
    set & operator = (const std::initializer_list <T> & il)
@@ -80,6 +83,7 @@ public:
    }
    void swap(set& rhs) noexcept
    {
+      bst.swap(rhs.bst);
    }
 
    //
@@ -89,11 +93,11 @@ public:
    class iterator;
    iterator begin() const noexcept 
    { 
-      return iterator(); 
+      return bst.begin(); 
    }
    iterator end() const noexcept 
    { 
-      return iterator(); 
+      return bst.end(); 
    }
 
    //
@@ -101,7 +105,7 @@ public:
    //
    iterator find(const T& t) 
    { 
-      return iterator(); 
+      return bst.find(t); 
    }
 
    //
@@ -109,11 +113,11 @@ public:
    //
    bool empty() const noexcept 
    { 
-      return true;    
+      return bst.empty();    
    }
    size_t size() const noexcept 
    { 
-      return 99;     
+      return bst.size();     
    }
 
    //
@@ -121,13 +125,11 @@ public:
    //
    std::pair<iterator, bool> insert(const T& t)
    {
-      std::pair<iterator, bool> p(iterator(), true);
-      return p;
+      return bst.insert(t);
    }
    std::pair<iterator, bool> insert(T&& t)
    {
-      std::pair<iterator, bool> p(iterator(), true);
-      return p;
+      return bst.insert(std::move(t));
    }
    void insert(const std::initializer_list <T>& il)
    {
@@ -142,11 +144,12 @@ public:
    // Remove
    //
    void clear() noexcept 
-   { 
+   {
+      bst.clear();
    }
    iterator erase(iterator &it)
    { 
-      return iterator(); 
+      return bst.erase(it.it); 
    }
    size_t erase(const T & t) 
    {
@@ -177,54 +180,59 @@ public:
    iterator() 
    { 
    }
-   iterator(const typename custom::BST<T>::iterator& itRHS) 
+   iterator(const typename custom::BST<T>::iterator& itRHS) : it(itRHS)
    {  
    }
-   iterator(const iterator & rhs) 
+   iterator(const iterator & rhs) : it(rhs.it)
    { 
    }
    iterator & operator = (const iterator & rhs)
    {
+      it = rhs.it;
       return *this;
    }
 
    // equals, not equals operator
    bool operator != (const iterator & rhs) const 
    { 
-      return true; 
+      return it != rhs.it; 
    }
    bool operator == (const iterator & rhs) const 
    { 
-      return true; 
+      return it == rhs.it; 
    }
 
    // dereference operator: by-reference so we can modify the Set
    const T & operator * () const 
    { 
-      return *(new T); 
+      return *it; 
    }
 
    // prefix increment
    iterator & operator ++ ()
    {
+      ++it;
       return *this;
    }
 
    // postfix increment
    iterator operator++ (int postfix)
    {
+      it += postfix;
       return *this;
    }
    
    // prefix decrement
    iterator & operator -- ()
    {
+      --it;
       return *this;
    }
    
    // postfix decrement
    iterator operator-- (int postfix)
    {
+      it -= postfix;
       return *this;
    }
    
