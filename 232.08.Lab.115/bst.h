@@ -266,27 +266,7 @@ namespace custom
    template <typename T>
    BST <T> ::BST(const BST<T>& rhs) : root(nullptr), numElements(rhs.numElements)
    {
-      if (!rhs.root)
-         return;
-
-
-      std::function<BNode* (BNode*, BNode*)> copy = [&](BNode* src, BNode* parent) -> BNode*
-         {
-            if (!src)
-               return nullptr;
-
-            BNode* pNew = new BNode(src->data);
-            pNew->isRed = src->isRed;
-            pNew->pParent = parent;
-
-            pNew->pLeft = copy(src->pLeft, pNew);
-            pNew->pRight = copy(src->pRight, pNew);
-
-            return pNew;
-         };
-
-      root = copy(rhs.root, nullptr);
-
+      *this = rhs;
    }
 
    /*********************************************
@@ -310,6 +290,7 @@ namespace custom
    template <typename T>
    BST <T> ::BST(const std::initializer_list<T>& il)
    {
+      clear();
       for (const auto& item : il)
          insert(item);
    }
