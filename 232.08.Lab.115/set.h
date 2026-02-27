@@ -44,21 +44,20 @@ public:
    // 
    // Construct
    //
-   set() 
-   { 
-   }
-   set(const set &  rhs) : bst(rhs.bst)
-   { 
-   }
-   set(set && rhs) : bst(std::move(rhs.bst))
-   { 
-   }
-   set(const std::initializer_list <T> & il) : bst(il)
+   set() {}
+   set(const set &  rhs) : bst(rhs.bst) {}
+   set(set && rhs) : bst(std::move(rhs.bst)) {}
+
+   set(const std::initializer_list <T> & il) // there might be a more efficient way to accomplish this
    {
+      clear();
+      insert(il);
    }
    template <class Iterator>
-   set(Iterator first, Iterator last) 
+   set(Iterator first, Iterator last) // there might be a more efficient way to accomplish this
    {
+      clear();
+      insert(first, last);
    }
   ~set() { }
 
@@ -73,12 +72,14 @@ public:
    }
    set & operator = (set && rhs)
    {
-      bst = rhs.bst;
-      rhs.bst.clear();
+      clear();
+      swap(rhs);
       return *this;
    }
-   set & operator = (const std::initializer_list <T> & il)
+   set & operator = (const std::initializer_list <T> & il) // there might be a more efficient way to accomplish this
    {
+      clear();
+      insert(il);
       return *this;
    }
    void swap(set& rhs) noexcept
@@ -125,18 +126,24 @@ public:
    //
    std::pair<iterator, bool> insert(const T& t)
    {
-      return bst.insert(t);
+      std::pair<iterator, bool> bst_pair = bst.insert(t, true);
+      return std::pair<iterator, bool>(iterator(bst_pair.first), bst_pair.second);
    }
    std::pair<iterator, bool> insert(T&& t)
    {
-      return bst.insert(std::move(t));
+      std::pair<iterator, bool> bst_pair = bst.insert(std::move(t), true);
+      return std::pair<iterator, bool>(iterator(bst_pair.first), bst_pair.second);
    }
    void insert(const std::initializer_list <T>& il)
    {
+      for (const auto& element : il)
+         insert(element);
    }
    template <class Iterator>
    void insert(Iterator first, Iterator last)
    {
+      for (auto it = first; it != last; ++it)
+         insert(*it);
    }
 
 
@@ -153,11 +160,20 @@ public:
    }
    size_t erase(const T & t) 
    {
-      return 99;
+      auto it = find(t);
+
+      if (it == end())
+         return 0;
+
+      erase(it);
+      return 1;
    }
    iterator erase(iterator &itBegin, iterator &itEnd)
    {
-      return iterator();
+      while (itBegin != itEnd)
+         itBegin = erase(itBegin);
+
+      return itEnd;
    }
 
 private:
@@ -177,15 +193,10 @@ class set <T> :: iterator
    friend class custom::set<T>;
 public:
    // constructors, destructors, and assignment operator
-   iterator() 
-   { 
-   }
-   iterator(const typename custom::BST<T>::iterator& itRHS) : it(itRHS)
-   {  
-   }
-   iterator(const iterator & rhs) : it(rhs.it)
-   { 
-   }
+   iterator() {}
+   iterator(const typename custom::BST<T>::iterator& itRHS) : it(itRHS) {}
+   iterator(const iterator & rhs) : it(rhs.it) {}
+
    iterator & operator = (const iterator & rhs)
    {
       it = rhs.it;
