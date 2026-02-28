@@ -48,13 +48,14 @@ namespace custom
         set(const set& rhs) : bst(rhs.bst) {}
         set(set&& rhs) : bst(std::move(rhs.bst)) {}
 
-        set(const std::initializer_list <T>& il) // there might be a more efficient way to accomplish this
+        set(const std::initializer_list <T>& il)
         {
             clear();
             insert(il);
         }
+
         template <class Iterator>
-        set(Iterator first, Iterator last) // there might be a more efficient way to accomplish this
+        set(Iterator first, Iterator last)
         {
             clear();
             insert(first, last);
@@ -76,7 +77,7 @@ namespace custom
             swap(rhs);
             return *this;
         }
-        set& operator = (const std::initializer_list <T>& il) // there might be a more efficient way to accomplish this
+        set& operator = (const std::initializer_list <T>& il)
         {
             clear();
             insert(il);
@@ -244,7 +245,7 @@ namespace custom
         // postfix decrement
         iterator operator-- (int)
         {
-			iterator temp(*this);
+            iterator temp(*this);
             --it;
             return temp;
         }
