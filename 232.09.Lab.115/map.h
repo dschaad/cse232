@@ -15,6 +15,7 @@
  *        map::iterator       : An iterator through a map
  * Author
  *    Tori Tremelling, David Schaad
+ *    Time Spent: 2 hour (David)
  ************************************************************************/
 
 #pragma once
@@ -265,16 +266,10 @@ namespace custom
    template <typename K, typename V>
    V& map <K, V> :: operator [] (const K& key)
    {
-      iterator it = find(key);
+      Pairs p(key);
+      auto result = insert(p);
 
-      if (it == end())
-      {
-         Pairs p(key, V());
-         auto result = insert(p);
-         it = result.first;
-      }
-
-      return (*it).second;
+      return (*result.first).second;
    }
 
    /*****************************************************
@@ -284,8 +279,11 @@ namespace custom
    template <typename K, typename V>
    const V& map <K, V> :: operator [] (const K& key) const
    {
-      auto it = bst.find(key);
-      return (*it).second;
+      Pairs p(key);
+      auto it = bst.find(p);
+
+      if (it != bst.end())
+         return (*it).second;
    }
 
    /*****************************************************
@@ -350,7 +348,7 @@ namespace custom
    typename map<K, V>::iterator map<K, V>::erase(map<K, V>::iterator first, map<K, V>::iterator last)
    {
       //while (first != last)
-      //   first = erase(first);
+         //first = erase(first);
 
       return last;
    }
