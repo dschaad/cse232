@@ -27,148 +27,162 @@ class TestPQueue;    // forward declaration for unit test class
 namespace custom
 {
 
-/*************************************************
- * P QUEUE
- * Create a priority queue.
- *************************************************/
-template<class T, class Container = custom::vector<T>, class Compare = std::less<T>>
-class priority_queue
-{
-   friend class ::TestPQueue; // give the unit test class access to the privates
-   template <class TT, class CContainer, class CCompare>
-   friend void swap(priority_queue<TT, CContainer, CCompare>& lhs, priority_queue<TT, CContainer, CCompare>& rhs);
+   /*************************************************
+    * P QUEUE
+    * Create a priority queue.
+    *************************************************/
+   template<class T, class Container = custom::vector<T>, class Compare = std::less<T>>
+   class priority_queue
+   {
+      friend class ::TestPQueue; // give the unit test class access to the privates
+      template <class TT, class CContainer, class CCompare>
+      friend void swap(priority_queue<TT, CContainer, CCompare>& lhs, priority_queue<TT, CContainer, CCompare>& rhs);
 
-public:
+   public:
 
-   //
-   // construct
-   //
-   priority_queue(const Compare & c = Compare()) 
+      //
+      // construct
+      //
+      priority_queue(const Compare& c = Compare()) {}
+      priority_queue(const priority_queue& rhs, const Compare& c = Compare()) : container(rhs.container), compare(c) {}
+      priority_queue(priority_queue&& rhs, const Compare& c = Compare()) : container(std::move(rhs.container)), compare(c) {}
+      template <class Iterator>
+      priority_queue(Iterator first, Iterator last, const Compare& c = Compare())
+      {
+      }
+      explicit priority_queue(const Compare& c, Container&& rhs)
+      {
+      }
+      explicit priority_queue(const Compare& c, Container& rhs) {}
+      ~priority_queue()
+      {
+      }
+
+      //
+      // Access
+      //
+      const T& top() const;
+
+      //
+      // Insert
+      //
+      void  push(const T& t);
+      void  push(T&& t);
+
+      //
+      // Remove
+      //
+      void  pop();
+
+      //
+      // Status
+      //
+      size_t size()  const
+      {
+         return container.size();
+      }
+      bool empty() const
+      {
+         return container.empty();
+      }
+
+   private:
+
+      void heapify();                            // convert the container in to a heap
+      bool percolateDown(size_t indexHeap);      // fix heap from index down. This is a heap index!
+
+      Container container;       // underlying container (probably a vector)
+      Compare   compare;         // comparision operator
+
+   };
+
+   /************************************************
+    * P QUEUE :: TOP
+    * Get the maximum item from the heap: the top item.
+    ***********************************************/
+   template <class T, class Container, class Compare>
+   const T& priority_queue <T, Container, Compare> ::top() const
+   {
+      if (!container.empty())
+         return container.front();
+      else
+         throw std::out_of_range("std:out_of_range"); // Feel like this looks weird, but it's what the unit tests expect
+   }
+
+   /**********************************************
+    * P QUEUE :: POP
+    * Delete the top item from the heap.
+    **********************************************/
+   template <class T, class Container, class Compare>
+   void priority_queue <T, Container, Compare> ::pop()
    {
    }
-   priority_queue(const priority_queue& rhs, const Compare& c = Compare()) : container(rhs.container), compare(c)
-   { 
-   }
-   priority_queue(priority_queue&& rhs, const Compare& c = Compare()) : container(std::move(rhs.container)), compare(c)
-   { 
-   }
-   template <class Iterator>
-   priority_queue(Iterator first, Iterator last, const Compare & c = Compare()) 
+
+   /*****************************************
+    * P QUEUE :: PUSH
+    * Add a new element to the heap, reallocating as necessary
+    ****************************************/
+   template <class T, class Container, class Compare>
+   void priority_queue <T, Container, Compare> ::push(const T& t)
    {
    }
-   explicit priority_queue (const Compare& c, Container && rhs) 
-   {
-   }
-   explicit priority_queue (const Compare& c, Container & rhs) 
-   {
-   }
-  ~priority_queue() 
+   template <class T, class Container, class Compare>
+   void priority_queue <T, Container, Compare> ::push(T&& t)
    {
    }
 
-   //
-   // Access
-   //
-   const T & top() const;
+   /************************************************
+    * P QUEUE :: PERCOLATE DOWN
+    * The item at the passed index may be out of heap
+    * order. Take care of that little detail!
+    * Return TRUE if anything changed.
+    ************************************************/
+   template <class T, class Container, class Compare>
+   bool priority_queue <T, Container, Compare> ::percolateDown(size_t indexHeap)
+   {
+      using std::swap;
 
-   //
-   // Insert
-   //
-   void  push(const T& t);
-   void  push(T&& t);     
+      // Find the left child and the right child of index
+      size_t indexLeft = indexHeap * 2;
+      size_t indexRight = indexLeft + 1;
+      size_t indexBigger;
+      Compare comp; // Instructs how we 'rank' our values
 
-   //
-   // Remove
-   //
-   void  pop(); 
+      // Determine which child ranks higher
+      if (indexRight <= size() && comp(container[indexLeft-1], container[indexRight-1]))
+         indexBigger = indexRight;
+      else
+         indexBigger = indexLeft;
 
-   //
-   // Status
-   //
-   size_t size()  const 
-   { 
-      return container.size();   
+      // If the larger child ranks higher than the parent, swap them
+      if (indexBigger <= size() && comp(container[indexHeap-1], container[indexBigger-1]))
+      {
+         swap(container[indexHeap-1], container[indexBigger-1]);
+         percolateDown(indexBigger);
+         return true;
+      }
+         
+      return false;
    }
-   bool empty() const 
-   { 
-      return container.empty();  
+
+   /************************************************
+    * P QUEUE :: HEAPIFY
+    * Turn the container into a heap.
+    ************************************************/
+   template <class T, class Container, class Compare>
+   void priority_queue <T, Container, Compare> ::heapify()
+   {
    }
-   
-private:
 
-   void heapify();                            // convert the container in to a heap
-   bool percolateDown(size_t indexHeap);      // fix heap from index down. This is a heap index!
-
-   Container container;       // underlying container (probably a vector)
-   Compare   compare;         // comparision operator
+   /************************************************
+    * SWAP
+    * Swap the contents of two priority queues
+    ************************************************/
+   template <class T, class Container, class Compare>
+   inline void swap(custom::priority_queue <T, Container, Compare>& lhs,
+      custom::priority_queue <T, Container, Compare>& rhs)
+   {
+      lhs.container.swap(rhs.container);
+   }
 
 };
-
-/************************************************
- * P QUEUE :: TOP
- * Get the maximum item from the heap: the top item.
- ***********************************************/
-template <class T, class Container, class Compare>
-const T & priority_queue <T, Container, Compare> :: top() const
-{
-   if (!container.empty())
-       return container.front();
-   else
-       return *(new T);
-}
-
-/**********************************************
- * P QUEUE :: POP
- * Delete the top item from the heap.
- **********************************************/
-template <class T, class Container, class Compare>
-void priority_queue <T, Container, Compare> :: pop()
-{
-}
-
-/*****************************************
- * P QUEUE :: PUSH
- * Add a new element to the heap, reallocating as necessary
- ****************************************/
-template <class T, class Container, class Compare>
-void priority_queue <T, Container, Compare> :: push(const T & t)
-{
-}
-template <class T, class Container, class Compare>
-void priority_queue <T, Container, Compare> :: push(T && t)
-{
-}
-
-/************************************************
- * P QUEUE :: PERCOLATE DOWN
- * The item at the passed index may be out of heap
- * order. Take care of that little detail!
- * Return TRUE if anything changed.
- ************************************************/
-template <class T, class Container, class Compare>
-bool priority_queue <T, Container, Compare> :: percolateDown(size_t indexHeap)
-{
-   return false;
-}
-
-/************************************************
- * P QUEUE :: HEAPIFY
- * Turn the container into a heap.
- ************************************************/
-template <class T, class Container, class Compare>
-void priority_queue <T, Container, Compare> ::heapify()
-{
-}
-
-/************************************************
- * SWAP
- * Swap the contents of two priority queues
- ************************************************/
-template <class T, class Container, class Compare>
-inline void swap(custom::priority_queue <T, Container, Compare> & lhs,
-                 custom::priority_queue <T, Container, Compare> & rhs)
-{
-    lhs.container.swap(rhs.container);
-}
-
-}; 
