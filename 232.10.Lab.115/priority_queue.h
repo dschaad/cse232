@@ -14,7 +14,7 @@
  *    This will contain the class definition of:
  *        priority_queue          : A class that represents a Priority Queue
  * Author
- *    David Schaad, Tori Tremelling
+ *    <your names here>
  ************************************************************************/
 
 #pragma once
@@ -46,10 +46,10 @@ public:
    priority_queue(const Compare & c = Compare()) 
    {
    }
-   priority_queue(const priority_queue &  rhs, const Compare & c = Compare())  
+   priority_queue(const priority_queue& rhs, const Compare& c = Compare()) : container(rhs.container), compare(c)
    { 
    }
-   priority_queue(priority_queue && rhs, const Compare & c = Compare())  
+   priority_queue(priority_queue&& rhs, const Compare& c = Compare()) : container(std::move(rhs.container)), compare(c)
    { 
    }
    template <class Iterator>
@@ -87,11 +87,11 @@ public:
    //
    size_t size()  const 
    { 
-      return 99;   
+      return container.size();   
    }
    bool empty() const 
    { 
-      return false;  
+      return container.empty();  
    }
    
 private:
@@ -111,7 +111,10 @@ private:
 template <class T, class Container, class Compare>
 const T & priority_queue <T, Container, Compare> :: top() const
 {
-   return *(new T);
+   if (!container.empty())
+       return container.front();
+   else
+       return *(new T);
 }
 
 /**********************************************
@@ -165,6 +168,7 @@ template <class T, class Container, class Compare>
 inline void swap(custom::priority_queue <T, Container, Compare> & lhs,
                  custom::priority_queue <T, Container, Compare> & rhs)
 {
+    lhs.container.swap(rhs.container);
 }
 
 }; 
