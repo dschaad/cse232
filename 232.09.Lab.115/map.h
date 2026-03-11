@@ -36,334 +36,334 @@ class TestMap;
 namespace custom
 {
 
-    /*****************************************************************
-     * MAP
-     * Create a Map, similar to a Binary Search Tree
-     *****************************************************************/
-    template <class K, class V>
-    class map
-    {
-        friend class ::TestMap;
+   /*****************************************************************
+    * MAP
+    * Create a Map, similar to a Binary Search Tree
+    *****************************************************************/
+   template <class K, class V>
+   class map
+   {
+      friend class ::TestMap;
 
-        template <class KK, class VV>
-        friend void swap(map<KK, VV>& lhs, map<KK, VV>& rhs);
-    public:
-        using Pairs = custom::pair<K, V>;
+      template <class KK, class VV>
+      friend void swap(map<KK, VV>& lhs, map<KK, VV>& rhs);
+   public:
+      using Pairs = custom::pair<K, V>;
 
-        // 
-        // Construct
-        //
-        map() {}
-        map(const map& rhs) : bst(rhs.bst) {}
-        map(map&& rhs) : bst(std::move(rhs.bst)) {}
+      // 
+      // Construct
+      //
+      map() {}
+      map(const map& rhs) : bst(rhs.bst) {}
+      map(map&& rhs) : bst(std::move(rhs.bst)) {}
 
-        template <class Iterator>
-        map(Iterator first, Iterator last)
-        {
-            clear();
-            insert(first, last);
-        }
-        map(const std::initializer_list <Pairs>& il)
-        {
-            clear();
-            insert(il);
-        }
-        ~map() {}
+      template <class Iterator>
+      map(Iterator first, Iterator last)
+      {
+         clear();
+         insert(first, last);
+      }
+      map(const std::initializer_list <Pairs>& il)
+      {
+         clear();
+         insert(il);
+      }
+      ~map() {}
 
-        //
-        // Assign
-        //
-        map& operator = (const map& rhs)
-        {
-            bst = rhs.bst;
-            return *this;
-        }
-        map& operator = (map&& rhs)
-        {
-            clear();
-            bst.swap(rhs.bst);
-            return *this;
-        }
-        map& operator = (const std::initializer_list <Pairs>& il)
-        {
-            clear();
-            insert(il);
-            return *this;
-        }
+      //
+      // Assign
+      //
+      map& operator = (const map& rhs)
+      {
+         bst = rhs.bst;
+         return *this;
+      }
+      map& operator = (map&& rhs)
+      {
+         clear();
+         bst.swap(rhs.bst);
+         return *this;
+      }
+      map& operator = (const std::initializer_list <Pairs>& il)
+      {
+         clear();
+         insert(il);
+         return *this;
+      }
 
-        // 
-        // Iterator
-        //
-        class iterator;
-        iterator begin()
-        {
-            return bst.begin();
-        }
-        iterator end()
-        {
-            return bst.end();
-        }
+      // 
+      // Iterator
+      //
+      class iterator;
+      iterator begin()
+      {
+         return bst.begin();
+      }
+      iterator end()
+      {
+         return bst.end();
+      }
 
-        // 
-        // Access
-        //
-        const V& operator [] (const K& k) const;
-        V& operator [] (const K& k);
-        const V& at(const K& k) const;
-        V& at(const K& k);
-        iterator find(const K& k)
-        {
-            return bst.find(k);
-        }
+      // 
+      // Access
+      //
+      const V& operator [] (const K& k) const;
+      V& operator [] (const K& k);
+      const V& at(const K& k) const;
+      V& at(const K& k);
+      iterator find(const K& k)
+      {
+         return bst.find(k);
+      }
 
-        //
-        // Insert
-        //
-        custom::pair<typename map::iterator, bool> insert(Pairs&& rhs)
-        {
-            auto result = bst.insert(std::move(rhs), true);
-            return custom::make_pair(iterator(result.first), result.second);
-        }
-        custom::pair<typename map::iterator, bool> insert(const Pairs& rhs)
-        {
-            auto result = bst.insert(rhs, true);
-            return custom::make_pair(iterator(result.first), result.second);
-        }
+      //
+      // Insert
+      //
+      custom::pair<typename map::iterator, bool> insert(Pairs&& rhs)
+      {
+         auto result = bst.insert(std::move(rhs), true);
+         return custom::make_pair(iterator(result.first), result.second);
+      }
+      custom::pair<typename map::iterator, bool> insert(const Pairs& rhs)
+      {
+         auto result = bst.insert(rhs, true);
+         return custom::make_pair(iterator(result.first), result.second);
+      }
 
-        template <class Iterator>
-        void insert(Iterator first, Iterator last)
-        {
-            for (; first != last; ++first)
-                insert(*first);
-        }
-        void insert(const std::initializer_list <Pairs>& il)
-        {
-            for (const auto& item : il)
-                insert(item);
-        }
+      template <class Iterator>
+      void insert(Iterator first, Iterator last)
+      {
+         for (; first != last; ++first)
+            insert(*first);
+      }
+      void insert(const std::initializer_list <Pairs>& il)
+      {
+         for (const auto& item : il)
+            insert(item);
+      }
 
-        //
-        // Remove
-        //
-        void clear() noexcept
-        {
-            bst.clear();
-        }
-        size_t erase(const K& k);
-        iterator erase(iterator it);
-        iterator erase(iterator first, iterator last);
+      //
+      // Remove
+      //
+      void clear() noexcept
+      {
+         bst.clear();
+      }
+      size_t erase(const K& k);
+      iterator erase(iterator it);
+      iterator erase(iterator first, iterator last);
 
-        //
-        // Status
-        //
-        bool empty() const noexcept
-        {
-            return bst.empty();
-        }
-        size_t size() const noexcept
-        {
-            return bst.size();
-        }
-
-
-    private:
-
-        // the students DO NOT need to use a nested class
-        BST < pair <K, V >> bst;
-    };
+      //
+      // Status
+      //
+      bool empty() const noexcept
+      {
+         return bst.empty();
+      }
+      size_t size() const noexcept
+      {
+         return bst.size();
+      }
 
 
-    /**********************************************************
-     * MAP ITERATOR
-     * Forward and reverse iterator through a Map, just call
-     * through to BSTIterator
-     *********************************************************/
-    template <typename K, typename V>
-    class map <K, V> ::iterator
-    {
-        friend class ::TestMap;
-        template <class KK, class VV>
-        friend class custom::map;
-    public:
-        //
-        // Construct
-        //
-        iterator() {}
-        iterator(const typename BST < pair <K, V> > ::iterator& itRHS) : it(itRHS) {}
-        iterator(const iterator& rhs) : it(rhs.it) {}
+   private:
 
-        //
-        // Assign
-        //
-        iterator& operator = (const iterator& rhs)
-        {
-            it = rhs.it;
-            return *this;
-        }
-
-        //
-        // Compare
-        //
-        bool operator == (const iterator& rhs) const
-        {
-            return it == rhs.it;
-        }
-        bool operator != (const iterator& rhs) const
-        {
-            return it != rhs.it;
-        }
-
-        // 
-        // Access
-        //
-        pair <K, V>& operator * ()
-        {
-            return const_cast<pair<K, V>&>(*it);
-        }
-
-        const pair <K, V>& operator * () const
-        {
-            return *it;
-        }
-
-        //
-        // Increment
-        //
-        iterator& operator ++ ()
-        {
-            ++it;
-            return *this;
-        }
-        iterator operator ++ (int postfix)
-        {
-            iterator temp(*this);
-            ++it;
-            return temp;
-        }
-        iterator& operator -- ()
-        {
-            --it;
-            return *this;
-        }
-        iterator  operator -- (int postfix)
-        {
-            iterator temp(*this);
-            --it;
-            return temp;
-        }
-
-    private:
-
-        // Member variable
-        typename BST < pair <K, V >>  ::iterator it;
-    };
+      // the students DO NOT need to use a nested class
+      BST < pair <K, V >> bst;
+   };
 
 
-    /*****************************************************
-     * MAP :: SUBSCRIPT
-     * Retrieve an element from the map
-     ****************************************************/
-    template <typename K, typename V>
-    V& map <K, V> :: operator [] (const K& key)
-    {
-        Pairs p(key);
-        auto result = insert(p);
+   /**********************************************************
+    * MAP ITERATOR
+    * Forward and reverse iterator through a Map, just call
+    * through to BSTIterator
+    *********************************************************/
+   template <typename K, typename V>
+   class map <K, V> ::iterator
+   {
+      friend class ::TestMap;
+      template <class KK, class VV>
+      friend class custom::map;
+   public:
+      //
+      // Construct
+      //
+      iterator() {}
+      iterator(const typename BST < pair <K, V> > ::iterator& itRHS) : it(itRHS) {}
+      iterator(const iterator& rhs) : it(rhs.it) {}
 
-        return (*result.first).second;
-    }
+      //
+      // Assign
+      //
+      iterator& operator = (const iterator& rhs)
+      {
+         it = rhs.it;
+         return *this;
+      }
 
-    /*****************************************************
-     * MAP :: SUBSCRIPT
-     * Retrieve an element from the map
-     ****************************************************/
-    template <typename K, typename V>
-    const V& map <K, V> :: operator [] (const K& key) const
-    {
-        Pairs p(key);
-        auto it = bst.find(p);
+      //
+      // Compare
+      //
+      bool operator == (const iterator& rhs) const
+      {
+         return it == rhs.it;
+      }
+      bool operator != (const iterator& rhs) const
+      {
+         return it != rhs.it;
+      }
 
-        if (it != bst.end())
-            return (*it).second;
-    }
+      // 
+      // Access
+      //
+      pair <K, V>& operator * ()
+      {
+         return const_cast<pair<K, V>&>(*it);
+      }
 
-    /*****************************************************
-     * MAP :: AT
-     * Retrieve an element from the map
-     ****************************************************/
-    template <typename K, typename V>
-    V& map <K, V> ::at(const K& key)
-    {
-        iterator it = find(key);
+      const pair <K, V>& operator * () const
+      {
+         return *it;
+      }
 
-        if (it == end())
-            throw std::out_of_range("invalid map<K, T> key");
+      //
+      // Increment
+      //
+      iterator& operator ++ ()
+      {
+         ++it;
+         return *this;
+      }
+      iterator operator ++ (int postfix)
+      {
+         iterator temp(*this);
+         ++it;
+         return temp;
+      }
+      iterator& operator -- ()
+      {
+         --it;
+         return *this;
+      }
+      iterator  operator -- (int postfix)
+      {
+         iterator temp(*this);
+         --it;
+         return temp;
+      }
 
-        return (*it).second;
-    }
+   private:
 
-    /*****************************************************
-     * MAP :: AT
-     * Retrieve an element from the map
-     ****************************************************/
-    template <typename K, typename V>
-    const V& map <K, V> ::at(const K& key) const
-    {
-        auto it = bst.find(key);
+      // Member variable
+      typename BST < pair <K, V >>  ::iterator it;
+   };
 
-        if (it == bst.end())
-            throw std::out_of_range("invalid map<K, T> key");
 
-        return (*it).second;
-    }
+   /*****************************************************
+    * MAP :: SUBSCRIPT
+    * Retrieve an element from the map
+    ****************************************************/
+   template <typename K, typename V>
+   V& map <K, V> :: operator [] (const K& key)
+   {
+      Pairs p(key);
+      auto result = insert(p);
 
-    /*****************************************************
-     * SWAP
-     * Swap two maps
-     ****************************************************/
-    template <typename K, typename V>
-    void swap(map <K, V>& lhs, map <K, V>& rhs)
-    {
-        lhs.bst.swap(rhs.bst);
-    }
+      return (*result.first).second;
+   }
 
-    /*****************************************************
-     * ERASE
-     * Erase one element
-     ****************************************************/
-    template <typename K, typename V>
-    size_t map<K, V>::erase(const K& k)
-    {
-        auto it = find(k);
-        if (it == end())
-            return 0;
+   /*****************************************************
+    * MAP :: SUBSCRIPT
+    * Retrieve an element from the map
+    ****************************************************/
+   template <typename K, typename V>
+   const V& map <K, V> :: operator [] (const K& key) const
+   {
+      Pairs p(key);
+      auto it = bst.find(p);
 
-        erase(it);
-        return 1;
-    }
+      if (it != bst.end())
+         return (*it).second;
+   }
 
-    /*****************************************************
-     * ERASE
-     * Erase several elements
-     ****************************************************/
-    template <typename K, typename V>
-    typename map<K, V>::iterator map<K, V>::erase(map<K, V>::iterator first, map<K, V>::iterator last)
-    {
-        while (first != last)
-        {
-            erase(first++);
-        }
+   /*****************************************************
+    * MAP :: AT
+    * Retrieve an element from the map
+    ****************************************************/
+   template <typename K, typename V>
+   V& map <K, V> ::at(const K& key)
+   {
+      iterator it = find(key);
 
-        return first;
-    }
+      if (it == end())
+         throw std::out_of_range("invalid map<K, T> key");
 
-    /*****************************************************
-     * ERASE
-     * Erase one element
-     ****************************************************/
-    template <typename K, typename V>
-    typename map<K, V>::iterator map<K, V>::erase(map<K, V>::iterator it)
-    {
-        return iterator(bst.erase(it.it));
-    }
+      return (*it).second;
+   }
+
+   /*****************************************************
+    * MAP :: AT
+    * Retrieve an element from the map
+    ****************************************************/
+   template <typename K, typename V>
+   const V& map <K, V> ::at(const K& key) const
+   {
+      auto it = bst.find(key);
+
+      if (it == bst.end())
+         throw std::out_of_range("invalid map<K, T> key");
+
+      return (*it).second;
+   }
+
+   /*****************************************************
+    * SWAP
+    * Swap two maps
+    ****************************************************/
+   template <typename K, typename V>
+   void swap(map <K, V>& lhs, map <K, V>& rhs)
+   {
+      lhs.bst.swap(rhs.bst);
+   }
+
+   /*****************************************************
+    * ERASE
+    * Erase one element
+    ****************************************************/
+   template <typename K, typename V>
+   size_t map<K, V>::erase(const K& k)
+   {
+      auto it = find(k);
+      if (it == end())
+         return 0;
+
+      erase(it);
+      return 1;
+   }
+
+   /*****************************************************
+    * ERASE
+    * Erase several elements
+    ****************************************************/
+   template <typename K, typename V>
+   typename map<K, V>::iterator map<K, V>::erase(map<K, V>::iterator first, map<K, V>::iterator last)
+   {
+      while (first != last)
+      {
+         erase(first++);
+      }
+
+      return first;
+   }
+
+   /*****************************************************
+    * ERASE
+    * Erase one element
+    ****************************************************/
+   template <typename K, typename V>
+   typename map<K, V>::iterator map<K, V>::erase(map<K, V>::iterator it)
+   {
+      return iterator(bst.erase(it.it));
+   }
 
 }; //  namespace custom
