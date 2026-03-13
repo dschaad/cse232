@@ -47,7 +47,7 @@ namespace custom
       priority_queue(const priority_queue& rhs, const Compare& c = Compare()) : container(rhs.container), compare(c) {}
       priority_queue(priority_queue&& rhs, const Compare& c = Compare()) : container(std::move(rhs.container)), compare(c) {}
       template <class Iterator>
-      priority_queue(Iterator first, Iterator last, const Compare& c = Compare())
+      priority_queue(Iterator first, Iterator last, const Compare& c = Compare()) : compare(c)
       {
          container.reserve(last - first);
          for (auto it = first; it != last; it++)
@@ -57,7 +57,10 @@ namespace custom
       {
          heapify();
       }
-      explicit priority_queue(const Compare& c, Container& rhs) {}
+      explicit priority_queue(const Compare& c, Container& rhs)  : container(rhs), compare(c)
+      {
+         heapify();
+      }
       ~priority_queue()
       {
       }
@@ -110,7 +113,7 @@ namespace custom
       if (!container.empty())
          return container.front();
       else
-         throw std::out_of_range("std:out_of_range"); // Feel like this looks weird, but it's what the unit tests expect
+         throw std::out_of_range("std:out_of_range");
    }
 
    /**********************************************
@@ -125,11 +128,11 @@ namespace custom
       // There's nothing to delete from an empty queue/heap
       if (!empty())
       {
-         // Swap the first (root) with the last
+         // Swap the first item (root) with the last
          swap(container[0], container[size() - 1]);
          container.pop_back();
 
-         // We need to move the new root to the correct location
+         // We need to move the new root to the correct location (percolate takes a heap index, so the first index is 1)
          percolateDown(1);
       }
    }
@@ -186,7 +189,7 @@ namespace custom
       // If the larger child ranks higher than the parent, swap them
       if (indexBigger <= size() && comp(container[indexHeap - 1], container[indexBigger - 1]))
       {
-         swap(container[indexHeap - 1], container[indexBigger - 1]);
+         swap(container[indexHeap - 1], container[indexBigger - 1]); // Calls template's swap if defined, or std::swap if not
          percolateDown(indexBigger);
          return true;
       }
