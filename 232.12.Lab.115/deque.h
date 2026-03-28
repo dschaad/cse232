@@ -210,6 +210,8 @@ namespace custom
         //
         iterator& operator = (const iterator& rhs)
         {
+            id = rhs.id;
+            d = rhs.d;
             return *this;
         }
 
@@ -233,10 +235,11 @@ namespace custom
         //
         int operator - (iterator it) const
         {
-            return 99;
+            return id - it.id;
         }
         iterator& operator += (int offset)
         {
+            id += offset;
             return *this;
         }
         iterator& operator ++ ()
@@ -311,22 +314,41 @@ namespace custom
     template <typename T, typename A>
     deque <T, A>& deque <T, A> :: operator = (deque& rhs)
     {
-        //auto itLHS = this->begin();
-        //auto itRHS = rhs.begin();
+        // self-assignment
+        if (this == &rhs)
+            return *this;
 
-        //while ((itLHS != end()) && (itRHS != rhs.end()))
-        //{
-        //   *itLHS = *itRHS;
-        //   ++itLHS;
-        //   ++itRHS;
-        //}
+        // Same size
+        if (numElements == rhs.numElements)
+        {
+            for (size_t i = 0; i < numElements; i++)
+                (*this)[i] = rhs[i];
 
-        ////erase(itLHS, end());
-        //while (itRHS != rhs.end())
-        //{
-        //   push_back(*itRHS);
-        //   ++itRHS;
-        //}
+            return *this;
+        }
+
+        // Different size
+        clear();
+
+        if (rhs.numElements == 0)
+            return *this;
+
+        numCells = 16;
+        numBlocks = 1;
+        numElements = rhs.numElements;
+        iaFront = 0;
+
+        data = new T * [numBlocks];
+        data[0] = std::allocator_traits<A>::allocate(alloc, numCells);
+
+        for (size_t i = 0; i < numElements; i++)
+        {
+            int ib = rhs.ibFromID((int)i);
+            int ic = rhs.icFromID((int)i);
+
+            std::allocator_traits<A>::construct(alloc, &data[0][i], rhs.data[ib][ic]);
+        }
+
         return *this;
     }
 
@@ -484,11 +506,29 @@ namespace custom
     template <typename T, typename A>
     void deque <T, A> ::clear()
     {
+        if (data == nullptr || numBlocks == 0)
+        {
+            numElements = 0;
+            iaFront = 0;
+            return;
+        }
+
+        // Destroy constructed elements
         for (size_t i = 0; i < numElements; i++)
         {
            int ib = ibFromID(i);
            int ic = icFromID(i);
            std::allocator_traits<A>::destroy(alloc, &data[ib][ic]);
+        }
+
+        // Deallocate any blocks that were allocated
+        for(size_t ib = 0; ib < numBlocks; ++ib)
+        { 
+            if (data[ib])
+            {
+                std::allocator_traits<A>::deallocate(alloc, data[ib], numCells);
+                data[ib] = nullptr;
+            }
         }
         
         numElements = 0;
