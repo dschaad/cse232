@@ -509,8 +509,39 @@ namespace custom
 
         std::allocator_traits<A>::destroy(alloc, &data[ib][ic]);
         
-        iaFront = (iaFront + 1) % (numCells * numBlocks);
         numElements--;
+
+        // if deque is now empty, reset iaFront and deallocate the now-empty block
+        if (numElements == 0)
+        {
+            iaFront = 0;
+            if (data && data[ib])
+            {
+                std::allocator_traits<A>::deallocate(alloc, data[ib], numCells);
+                data[ib] = nullptr;
+            }
+            return;
+        }
+
+        // advance the front offset
+        iaFront = (iaFront + 1) % (numCells * numBlocks);
+
+        // check whether the block that lost the element now contains any remaining elements
+        bool hasAny = false;
+        for (size_t id = 0; id < numElements; ++id)
+        {
+            if (ibFromID(static_cast<int>(id)) == ib)
+            {
+                hasAny = true;
+                break;
+            }
+        }
+
+        if (!hasAny && data && data[ib])
+        {
+            std::allocator_traits<A>::deallocate(alloc, data[ib], numCells);
+            data[ib] = nullptr;
+        }
     }
 
     /*****************************************
@@ -528,7 +559,36 @@ namespace custom
 
         std::allocator_traits<A>::destroy(alloc, &data[ib][ic]);
 
+        // decrement element count
         numElements--;
+
+        // if deque is now empty, reset iaFront
+        if (numElements == 0)
+        {
+            iaFront = 0;
+            if (data && data[ib])
+            {
+                std::allocator_traits<A>::deallocate(alloc, data[ib], numCells);
+                data[ib] = nullptr;
+            }
+            return;
+        }
+        // check whether the block that lost the element now contains any remaining elements
+        bool hasAny = false;
+        for (size_t i = 0; i < numElements; ++i)
+        {
+            if (ibFromID(static_cast<int>(i)) == ib)
+            {
+                hasAny = true;
+                break;
+            }
+        }
+
+        if (!hasAny && data && data[ib])
+        {
+            std::allocator_traits<A>::deallocate(alloc, data[ib], numCells);
+            data[ib] = nullptr;
+        }
     }
 
     /*****************************************
