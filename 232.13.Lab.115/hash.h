@@ -45,9 +45,7 @@ public:
    //
    // Construct
    //
-   unordered_set()
-   {
-   }
+   unordered_set() : buckets(8), numElements(0), maxLoadFactor(1.0) { }
    unordered_set(size_t numBuckets)
    {
    }
@@ -88,11 +86,17 @@ public:
    class local_iterator;
    iterator begin()
    {
-      return iterator();
+      // Loop through all our buckets, skipping any empty ones
+      for (auto itBucket = buckets.begin(); itBucket != buckets.end(); itBucket++)
+      {
+         if (!(*itBucket).empty())
+            return iterator(buckets.end(), itBucket, (*itBucket).begin());
+      }
+      return end();
    }
    iterator end()
    {
-      return iterator();
+      return iterator(buckets.end(), buckets.end(), buckets[0].end());
    }
    local_iterator begin(size_t iBucket)
    {
@@ -127,6 +131,9 @@ public:
    //
    void clear() noexcept
    {
+      for (size_t i = 0; i < bucket_count(); i++)
+         buckets[i].clear();
+      numElements = 0;
    }
    iterator erase(const T& t);
 
@@ -135,30 +142,31 @@ public:
    //
    size_t size() const 
    { 
-      return (size_t)99;
+      return (size_t)numElements;
    }
    bool empty() const 
    { 
-      return false; 
+      return size() == 0;
    }
    size_t bucket_count() const 
    { 
-      return (size_t)99;
+      return (size_t)buckets.size();
    }
    size_t bucket_size(size_t i) const
    {
-      return (size_t)99;
+      return (size_t)buckets[i].size();
    }
    float load_factor() const noexcept 
    { 
-      return (float)99.0; 
+      return (float)(numElements / bucket_count()); 
    }
    float max_load_factor() const noexcept 
    { 
-      return (float)99.0; 
+      return (float)maxLoadFactor; 
    }
    void  max_load_factor(float m)
    {
+      maxLoadFactor = m;
    }
 
 private:
@@ -187,14 +195,10 @@ class unordered_set <T, H, E, A> ::iterator
 public:
    // 
    // Construct
-   iterator() 
-   {
-   }
+   iterator() { }
    iterator(const typename custom::vector<custom::list<T> >::iterator& itVectorEnd,
             const typename custom::vector<custom::list<T> >::iterator& itVector,
-            const typename custom::list<T>::iterator &itList)
-   {
-   }
+            const typename custom::list<T>::iterator &itList) : itVectorEnd(itVectorEnd), itVector(itVector), itList(itList) { }
    iterator(const iterator& rhs) 
    { 
    }
@@ -203,7 +207,10 @@ public:
    // Assign
    //
    iterator& operator = (const iterator& rhs)
-   {
+   {      
+      this->itVectorEnd = rhs.itVectorEnd;
+      this->itVector = rhs.itVector;
+      this->itList = rhs.itList;
       return *this;
    }
 
@@ -224,7 +231,7 @@ public:
    //
    T& operator * ()
    {
-      return *(new T);
+      return *(itList);
    }
 
    //
@@ -364,6 +371,22 @@ typename unordered_set <T, H, E, A> ::iterator unordered_set<T, H, E, A>::find(c
 template <typename T, typename H, typename E, typename A>
 typename unordered_set <T, H, E, A> ::iterator & unordered_set<T, H, E, A>::iterator::operator ++ ()
 {
+   // Can't increment if we're already at the end of the vector
+   if (itVector == itVectorEnd)
+      return *this;
+
+   // Advance the list iterator and check if we're at the end of the vector
+   ++itList;
+   if (itList != (*itVector).end())
+      return *this;
+
+   // We're at the end of the list, so we need to find the next bucket
+   ++itVector;
+   while ((itVector != itVectorEnd) && (*itVector).empty()) // Keep incrementing until we hit a non-empty bucket or the end
+      ++itVector;
+   if (itVector != itVectorEnd) // So long as we're not at the end, assign itList the first element of the bucket we're in
+      itList = (*itVector).begin();
+
    return *this;
 }
 
