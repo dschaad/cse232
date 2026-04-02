@@ -14,7 +14,7 @@
  *        unordered_set           : A class that represents a hash
  *        unordered_set::iterator : An interator through hash
  * Author
- *    David Schaad, Tori Tremelling
+ *    <your names here>
  ************************************************************************/
 
 #pragma once
@@ -40,140 +40,162 @@ template <typename T,
           typename A = std::allocator<T> >
 class unordered_set
 {
-   friend class ::TestHash;   // give unit tests access to the privates
+    friend class ::TestHash;   // give unit tests access to the privates
 public:
-   //
-   // Construct
-   //
-   unordered_set() : buckets(8), numElements(0), maxLoadFactor(1.0) { }
-   unordered_set(size_t numBuckets)
-   {
-   }
-   unordered_set(const unordered_set&  rhs) 
-   {
-   }
-   unordered_set(unordered_set&& rhs) 
-   {
-   }
-   template <class Iterator>
-   unordered_set(Iterator first, Iterator last)
-   {
-   }
+    //
+    // Construct
+    //
+    unordered_set() : buckets(8), numElements(0), maxLoadFactor(1.0) {}
+    unordered_set(size_t numBuckets) : buckets(numBuckets), numElements(0), maxLoadFactor(1.0) {}
+    unordered_set(const unordered_set& rhs)
+    {
+    }
+    unordered_set(unordered_set&& rhs)
+    {
+    }
+    template <class Iterator>
+    unordered_set(Iterator first, Iterator last)
+    {
+    }
 
-   //
-   // Assign
-   //
-   unordered_set& operator=(const unordered_set& rhs)
-   {
-      return *this;
-   }
-   unordered_set& operator=(unordered_set&& rhs)
-   {
-      return *this;
-   }
-   unordered_set& operator=(const std::initializer_list<T>& il)
-   {
-      return *this;
-   }
-   void swap(unordered_set& rhs)
-   {
-   }
+    //
+    // Assign
+    //
+    unordered_set& operator=(const unordered_set& rhs)
+    {
+        if (this != &rhs)
+        {
+            buckets = rhs.buckets;
+            numElements = rhs.numElements;
+            maxLoadFactor = rhs.maxLoadFactor;
+        }
+        return *this;
+    }
+    unordered_set& operator=(unordered_set&& rhs)
+    {
+        if (this != &rhs)
+        {
+            buckets = std::move(rhs.buckets);
+            numElements = rhs.numElements;
+            maxLoadFactor = rhs.maxLoadFactor;
+            rhs.numElements = 0;
+        }
+        return *this;
+    }
+    unordered_set& operator=(const std::initializer_list<T>& il)
+    {
+        clear();
+        for (const auto& t : il)
+            insert(t);
+        return *this;
+    }
+    void swap(unordered_set& rhs)
+    {
+        buckets.swap(rhs.buckets);
+        std::swap(rhs.numElements, this->numElements);
+        std::swap(rhs.maxLoadFactor, this->maxLoadFactor);
+    }
 
-   // 
-   // Iterator
-   //
-   class iterator;
-   class local_iterator;
-   iterator begin()
-   {
-      // Loop through all our buckets, skipping any empty ones
-      for (auto itBucket = buckets.begin(); itBucket != buckets.end(); itBucket++)
-      {
-         if (!(*itBucket).empty())
-            return iterator(buckets.end(), itBucket, (*itBucket).begin());
-      }
-      return end();
-   }
-   iterator end()
-   {
-      return iterator(buckets.end(), buckets.end(), buckets[0].end());
-   }
-   local_iterator begin(size_t iBucket)
-   {
-      return local_iterator();
-   }
-   local_iterator end(size_t iBucket)
-   {
-      return local_iterator();
-   }
+    // 
+    // Iterator
+    //
+    class iterator;
+    class local_iterator;
+    iterator begin()
+    {
+        for (auto itBucket = buckets.begin(); itBucket != buckets.end(); ++itBucket)
+        {
+            if (!(*itBucket).empty())
+                return iterator(buckets.end(), itBucket, (*itBucket).begin());
 
-   //
-   // Access
-   //
-   size_t bucket(const T& t)
-   {
-      return (size_t)99;
-   }
-   iterator find(const T& t);
+        }
+        return end();
+    }
+    iterator end()
+    {
+        return iterator(buckets.end(), buckets.end(), buckets[0].end());
+    }
+    local_iterator begin(size_t iBucket)
+    {
+        return local_iterator(buckets[iBucket].begin());
+    }
+    local_iterator end(size_t iBucket)
+    {
+        return local_iterator(buckets[iBucket].end());
+    }
 
-   //   
-   // Insert
-   //
-   custom::pair<iterator, bool> insert(const T& t);
-   void insert(const std::initializer_list<T> & il);
-   void rehash(size_t numBuckets);
-   void reserve(size_t num)
-   {
-   }
+    //
+    // Access
+    //
+    size_t bucket(const T& t)
+    {
+        return (size_t)bucket_count();
+    }
+    iterator find(const T& t);
 
-   // 
-   // Remove
-   //
-   void clear() noexcept
-   {
-      for (size_t i = 0; i < bucket_count(); i++)
-         buckets[i].clear();
-      numElements = 0;
-   }
-   iterator erase(const T& t);
+    //   
+    // Insert
+    //
+    custom::pair<iterator, bool> insert(const T& t);
+    void insert(const std::initializer_list<T>& il);
+    void rehash(size_t numBuckets);
+    void reserve(size_t num)
+    {
+    }
 
-   //
-   // Status
-   //
-   size_t size() const 
-   { 
-      return (size_t)numElements;
+    // 
+    // Remove
+    //
+    void clear() noexcept
+    {
+        for (size_t i = 0; i < bucket_count(); ++i)
+            buckets[i].clear();
+        numElements = 0;
+    }
+    iterator erase(const T& t);
+
+    //
+    // Status
+    //
+   size_t size() const
+   {
+       return (size_t)numElements;
    }
-   bool empty() const 
-   { 
-      return size() == 0;
+   bool empty() const
+   {
+       return size() == 0;
    }
-   size_t bucket_count() const 
-   { 
-      return (size_t)buckets.size();
+   size_t bucket_count() const
+   {
+       return (size_t)buckets.size();
    }
    size_t bucket_size(size_t i) const
    {
-      return (size_t)buckets[i].size();
+       return (size_t)buckets[i].size();
    }
-   float load_factor() const noexcept 
-   { 
-      return (float)(numElements / bucket_count()); 
+   float load_factor() const noexcept
+   {
+       return (float)(numElements / bucket_count());
    }
-   float max_load_factor() const noexcept 
-   { 
-      return (float)maxLoadFactor; 
+   float max_load_factor() const noexcept
+   {
+       return (float)maxLoadFactor;
    }
    void  max_load_factor(float m)
    {
-      maxLoadFactor = m;
+       maxLoadFactor = m;
    }
 
 private:
 
    size_t min_buckets_required(size_t num) const
    {
-      return (size_t)99;
+      size_t bucketsNeeded = std::max<size_t>(1, static_cast<size_t>(std::ceil(num / std::max<float>(0.0001f, maxLoadFactor))));
+
+      size_t n = 1;
+      while (n < bucketsNeeded)
+          n *= 1;
+      return n;
    }
 
    custom::vector<custom::list<T,A>> buckets;  // each bucket in the hash
@@ -198,16 +220,14 @@ public:
    iterator() { }
    iterator(const typename custom::vector<custom::list<T> >::iterator& itVectorEnd,
             const typename custom::vector<custom::list<T> >::iterator& itVector,
-            const typename custom::list<T>::iterator &itList) : itVectorEnd(itVectorEnd), itVector(itVector), itList(itList) { }
-   iterator(const iterator& rhs) 
-   { 
-   }
+       const typename custom::list<T>::iterator& itList) :itVectorEnd(itVectorEnd), itVector(itVector), itList(itList) { }
+   iterator(const iterator& rhs) : itVectorEnd(rhs.itVectorEnd), itVector(rhs.itVector), itList(rhs.itList) { }
 
    //
    // Assign
    //
    iterator& operator = (const iterator& rhs)
-   {      
+   {
       this->itVectorEnd = rhs.itVectorEnd;
       this->itVector = rhs.itVector;
       this->itList = rhs.itList;
@@ -218,12 +238,12 @@ public:
    // Compare
    //
    bool operator != (const iterator& rhs) const 
-   { 
-      return true; 
+   {
+      return !(*this == rhs); 
    }
    bool operator == (const iterator& rhs) const 
    { 
-      return true;
+      return itVectorEnd == rhs.itVectorEnd && itVector == rhs.itVector && itList == rhs.itList;
    }
 
    // 
@@ -231,7 +251,8 @@ public:
    //
    T& operator * ()
    {
-      return *(itList);
+      /*return *itList;*/
+      return *(new T);
    }
 
    //
@@ -240,7 +261,9 @@ public:
    iterator& operator ++ ();
    iterator operator ++ (int postfix)
    {
-      return *this;
+      iterator temp(*this);
+      ++(*this);
+      return temp;
    }
 
 private:
@@ -265,21 +288,16 @@ public:
    // 
    // Construct
    //
-   local_iterator()  
-   {
-   }
-   local_iterator(const typename custom::list<T>::iterator& itList) 
-   {
-   }
-   local_iterator(const local_iterator& rhs) 
-   { 
-   }
+   local_iterator() : itList() { }
+   local_iterator(const typename custom::list<T>::iterator& itList) : itList(itList) { }
+   local_iterator(const local_iterator& rhs) : itList(rhs.itList) { }
 
    //
    // Assign
    //
    local_iterator& operator = (const local_iterator& rhs)
    {
+      itList = rhs.itList;
       return *this;
    }
 
@@ -288,11 +306,11 @@ public:
    //
    bool operator != (const local_iterator& rhs) const
    {
-      return true;
+      return !(*this == rhs);
    }
    bool operator == (const local_iterator& rhs) const
    {
-      return true;
+      return itList == rhs.itList;
    }
 
    // 
@@ -300,7 +318,7 @@ public:
    //
    T& operator * ()
    {
-      return *(new T);
+      return *itList;
    }
 
    // 
@@ -308,11 +326,14 @@ public:
    //
    local_iterator& operator ++ ()
    {
+      ++itList;
       return *this;
    }
    local_iterator operator ++ (int postfix)
    {
-      return *this;
+      local_iterator temp(*this);
+      ++(*this);
+      return temp;
    }
 
 private:
@@ -342,6 +363,8 @@ custom::pair<typename custom::unordered_set<T, H, E, A>::iterator, bool> unorder
 template <typename T, typename H, typename E, typename A>
 void unordered_set<T, H, E, A>::insert(const std::initializer_list<T> & il)
 {
+    for (const auto & v : il)
+        insert(v);
 }
 
 /*****************************************
@@ -361,6 +384,14 @@ void unordered_set<T, Hash, E, A>::rehash(size_t numBuckets)
 template <typename T, typename H, typename E, typename A>
 typename unordered_set <T, H, E, A> ::iterator unordered_set<T, H, E, A>::find(const T& t)
 {
+   //itBucket = buckets.begin();
+
+   //itList = buckets[itBuckets].find(t);
+
+   //if (itList != buckets[itBucket].end())
+   //    return iterator(buckets.end(), itBucket, itList);
+   //else 
+   //    return end();
    return iterator();
 }
 
@@ -378,14 +409,15 @@ typename unordered_set <T, H, E, A> ::iterator & unordered_set<T, H, E, A>::iter
    // Advance the list iterator and check if we're at the end of the vector
    ++itList;
    if (itList != (*itVector).end())
-      return *this;
+       return *this;
 
    // We're at the end of the list, so we need to find the next bucket
    ++itVector;
    while ((itVector != itVectorEnd) && (*itVector).empty()) // Keep incrementing until we hit a non-empty bucket or the end
-      ++itVector;
-   if (itVector != itVectorEnd) // So long as we're not at the end, assign itList the first element of the bucket we're in
-      itList = (*itVector).begin();
+       ++itVector;
+
+   if (itVector != itVectorEnd) // So long as we're not at the end, assign itList the first element of the bucket we're in 
+       itList = (*itVector).begin();
 
    return *this;
 }
@@ -397,6 +429,7 @@ typename unordered_set <T, H, E, A> ::iterator & unordered_set<T, H, E, A>::iter
 template <typename T, typename H, typename E, typename A>
 void swap(unordered_set<T,H,E,A>& lhs, unordered_set<T,H,E,A>& rhs)
 {
+    lhs.swap(rhs);
 }
 
 }
